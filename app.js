@@ -140,8 +140,8 @@ const App = (() => {
       return false;
     }
     recognition = new SpeechRecognition();
-    recognition.lang = 'th';
-    recognition.interimResults = true;   // Get results as user speaks
+    recognition.lang = 'th-TH';          // Standard Thailand Thai locale
+    recognition.interimResults = true;   // Real-time audio stream
     recognition.maxAlternatives = 10;
     recognition.continuous = false;
     return true;
@@ -157,7 +157,7 @@ const App = (() => {
       let settled = false;
       let interimResult = '';
 
-      // Timeout: if no result in 6 seconds, stop
+      // Timeout: 8 seconds
       const timeoutId = setTimeout(() => {
         if (!settled) {
           settled = true;
@@ -170,12 +170,12 @@ const App = (() => {
             reject('no-speech');
           }
         }
-      }, 6000);
+      }, 8000);
 
-      // Auto-stop timer: stops 1.2s after last speech detected
+      // Auto-stop: 1.8s after silence
       let autoStopTimer = null;
 
-      recognition.lang = 'th';
+      recognition.lang = 'th-TH';
       recognition.onresult = (event) => {
         let finalTranscript = '';
         let interimTranscript = '';
@@ -194,7 +194,7 @@ const App = (() => {
           // Reset auto-stop timer on each new interim result
           if (autoStopTimer) clearTimeout(autoStopTimer);
           autoStopTimer = setTimeout(() => {
-            // No new speech for 1.2s — stop and use what we have
+            // No new speech for 1.8s — stop and use what we have
             if (!settled) {
               settled = true;
               clearTimeout(timeoutId);
@@ -203,7 +203,7 @@ const App = (() => {
               updateMicButton();
               resolve([interimResult]);
             }
-          }, 1200);
+          }, 1800);
         }
 
         if (finalTranscript && !settled) {
@@ -218,7 +218,7 @@ const App = (() => {
             }
           }
           if (results.length === 0) results.push(finalTranscript);
-          console.log('[Speech] Final results:', results);
+          console.log('[Speech] Recognized:', results);
           try { recognition.stop(); } catch(e) {}
           resolve(results);
         }
@@ -276,6 +276,57 @@ const App = (() => {
       state.isRecording = false;
       updateMicButton();
     }
+  }
+
+  function updateMicButton() {
+    const micBtn = document.getElementById('mic-btn');
+    if (state.isRecording) {
+      micBtn.classList.add('recording');
+      micBtn.innerHTML = '<span class="mic-icon">🎙️</span><span class="mic-label">Listening...</span>';
+    } else {
+      micBtn.classList.remove('recording');
+      micBtn.innerHTML = '<span class="mic-icon">🎤</span><span class="mic-label">Tap to Speak</span>';
+    }
+  }
+
+  // Normalize Thai text for comparison
+  function normalizeThai(text) {
+    return text
+      .replace(/\s+/g, '')         // remove spaces
+      .replace(/ๆ+/g, '')         // remove repetition marks
+      .replace(/\u200B/g, '')      // remove zero-width spaces
+      .replace(/ฯ/g, '')          // remove abbreviation marks
+      .toLowerCase()
+      .trim();
+  }
+
+  function thaiMatch(spoken, expectedWord) {
+    const expected = expectedWord.thai || expectedWord;
+    const romanized = expectedWord.romanized || '';
+    const normSpoken = normalizeThai(spoken);
+    const normExpected = normalizeThai(expected);
+    const normRomanized = normalizeThai(romanized);
+
+    // 1. Exact match
+    if (normSpoken === normExpected) return true;
+
+    // 2. Spoken contains expected
+    if (normSpoken.includes(normExpected)) return true;
+
+    // 3. Number common variations (e.g. พัน <-> หนึ่งพัน, ร้อย <-> หนึ่งร้อย)
+    if (normExpected === 'พัน' && (normSpoken.includes('พัน') || normSpoken.includes('หนึ่งพัน') || normSpoken.includes('1000'))) return true;
+    if (normExpected === 'ร้อย' && (normSpoken.includes('ร้อย') || normSpoken.includes('หนึ่งร้อย') || normSpoken.includes('100'))) return true;
+
+    // 4. English / Romanized speech fallback
+    if (normRomanized && (normSpoken.includes(normRomanized) || normRomanized.includes(normSpoken))) return true;
+
+    // 5. Partial sub-word match for short words
+    if (normExpected.length <= 4 && normExpected.includes(normSpoken) && normSpoken.length >= 1) return true;
+
+    // 6. Starts with expected
+    if (normSpoken.startsWith(normExpected)) return true;
+
+    return false;
   }
 
   // ---- Quiz Engine ----
@@ -585,46 +636,6 @@ const App = (() => {
     micBtn.disabled = false;
   }
 
-  function updateMicButton() {
-    const micBtn = document.getElementById('mic-btn');
-    if (state.isRecording) {
-      micBtn.classList.add('recording');
-      micBtn.innerHTML = '<span class="mic-icon">🎙️</span><span class="mic-label">Listening...</span>';
-    } else {
-      micBtn.classList.remove('recording');
-      micBtn.innerHTML = '<span class="mic-icon">🎤</span><span class="mic-label">Tap to Speak</span>';
-    }
-  }
-
-  // Normalize Thai text for comparison
-  function normalizeThai(text) {
-    return text
-      .replace(/\s+/g, '')         // remove spaces
-      .replace(/ๆ+/g, '')         // remove repetition marks
-      .replace(/\u200B/g, '')      // remove zero-width spaces
-      .replace(/ฯ/g, '')          // remove abbreviation marks
-      .trim();
-  }
-
-  function thaiMatch(spoken, expected) {
-    const normSpoken = normalizeThai(spoken);
-    const normExpected = normalizeThai(expected);
-
-    // Exact match after normalization
-    if (normSpoken === normExpected) return true;
-
-    // Spoken contains the expected word (user repeated it)
-    if (normSpoken.includes(normExpected)) return true;
-
-    // Expected contains the spoken word (user said part of it - ok for short words)
-    if (normExpected.length <= 4 && normExpected.includes(normSpoken) && normSpoken.length >= 1) return true;
-
-    // Spoken starts with expected
-    if (normSpoken.startsWith(normExpected)) return true;
-
-    return false;
-  }
-
   async function handleMicClick() {
     if (state.isRecording) {
       stopListening();
@@ -641,7 +652,7 @@ const App = (() => {
       let bestMatch = results[0] || '';
 
       for (const result of results) {
-        if (thaiMatch(result, expected)) {
+        if (thaiMatch(result, q.word)) {
           isMatch = true;
           bestMatch = result;
           break;
