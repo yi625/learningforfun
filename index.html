@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🇹🇭 Learn Thai from Nong Mint</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://code.responsivevoice.org/responsivevoice.js?key=pVaOHqtc"></script>
+</head>
+<body>
+  <!-- ============ APP HEADER ============ -->
+  <header id="app-header">
+    <h1 class="app-title">🇹🇭 Learn Thai from Nong Mint</h1>
+    <p class="app-subtitle">Master Thai step by step — listen, speak, and translate</p>
+    <div class="overall-progress">
+      <div class="progress-bar">
+        <div class="progress-bar-fill" id="overall-progress-fill"></div>
+      </div>
+      <span class="progress-text" id="overall-progress-text">0% Complete</span>
+    </div>
+  </header>
+
+  <main id="app-main">
+
+    <!-- ============ VIEW: LEVEL SELECT ============ -->
+    <section id="view-levels" class="view">
+      <div class="section-header">
+        <h2>Choose a Level</h2>
+        <button class="reset-btn" id="reset-progress-btn" title="Reset all progress">🔄 Reset</button>
+      </div>
+      <div class="level-grid" id="level-grid">
+        <!-- Dynamically populated -->
+      </div>
+    </section>
+
+    <!-- ============ VIEW: MODE SELECT ============ -->
+    <section id="view-modes" class="view hidden">
+      <button class="back-btn back-to-levels">← Back to Levels</button>
+      <div class="mode-header">
+        <h2 id="mode-level-title"></h2>
+        <p id="mode-level-desc"></p>
+      </div>
+      <div class="mode-selector">
+        <button class="mode-btn" id="mode-learn-btn">
+          <span class="mode-icon">📖</span>
+          <span class="mode-name">Learn</span>
+          <span class="mode-desc">Browse vocabulary cards with audio</span>
+        </button>
+        <button class="mode-btn" id="mode-quiz-btn">
+          <span class="mode-icon">🎧</span>
+          <span class="mode-name">Listen & Translate</span>
+          <span class="mode-desc">Hear Thai, pick the English meaning</span>
+        </button>
+        <button class="mode-btn" id="mode-speak-btn">
+          <span class="mode-icon">🗣️</span>
+          <span class="mode-name">Speak & Match</span>
+          <span class="mode-desc">See English, speak the Thai word</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- ============ VIEW: LEARN MODE ============ -->
+    <section id="view-learn" class="view hidden">
+      <div class="learn-topbar">
+        <button class="back-btn back-to-modes">← Back</button>
+        <span class="card-counter" id="learn-card-counter">1 / 15</span>
+      </div>
+      <div class="learn-container">
+        <div class="vocab-card">
+          <div class="vocab-type" id="learn-type">📖 Word</div>
+          <div class="vocab-thai" id="learn-thai">สวัสดี</div>
+          <div class="vocab-romanized" id="learn-romanized">sa-wat-dee</div>
+          <div class="vocab-divider"></div>
+          <div class="vocab-english" id="learn-english">Hello</div>
+          <div class="vocab-tone">
+            <span class="tone-label">Tone:</span>
+            <span class="tone-badge" id="learn-tone">Low</span>
+          </div>
+          <button class="speak-btn" id="learn-speak-btn" title="Listen to pronunciation">
+            🔊 Listen
+          </button>
+        </div>
+        <div class="learn-nav">
+          <button class="nav-btn" id="learn-prev" title="Previous card">← Prev</button>
+          <div class="learn-dots" id="learn-dots"></div>
+          <button class="nav-btn" id="learn-next" title="Next card">Next →</button>
+        </div>
+        <p class="learn-hint">💡 Use ← → arrow keys to navigate, Space to listen</p>
+      </div>
+    </section>
+
+    <!-- ============ VIEW: QUIZ MODE (Listen & Translate) ============ -->
+    <section id="view-quiz" class="view hidden">
+      <div class="quiz-topbar">
+        <button class="back-btn back-to-modes">← Back</button>
+        <span class="quiz-score" id="quiz-score">Score: 0/0</span>
+      </div>
+      <div class="quiz-container">
+        <div class="quiz-progress">
+          <span id="quiz-progress-text">Question 1 of 15</span>
+          <div class="progress-bar">
+            <div class="progress-bar-fill" id="quiz-progress-fill"></div>
+          </div>
+        </div>
+        <p class="quiz-instruction" id="quiz-instruction">🎧 Listen and select the correct meaning:</p>
+        <div class="quiz-word-display">
+          <div class="quiz-thai" id="quiz-thai-text">สวัสดี</div>
+          <div class="quiz-romanized" id="quiz-romanized-text">sa-wat-dee</div>
+          <button class="replay-btn" id="quiz-replay-btn" title="Listen again">🔊 Listen Again</button>
+        </div>
+        <div class="quiz-options" id="quiz-options">
+          <!-- Dynamically populated -->
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ VIEW: SPEAK MODE ============ -->
+    <section id="view-speak" class="view hidden">
+      <div class="speak-topbar">
+        <button class="back-btn back-to-modes">← Back</button>
+        <span class="speak-score" id="speak-score">Score: 0/0</span>
+      </div>
+      <div class="speak-container">
+        <div class="speak-progress">
+          <span id="speak-progress-text">Word 1 of 15</span>
+          <div class="progress-bar">
+            <div class="progress-bar-fill" id="speak-progress-fill"></div>
+          </div>
+        </div>
+        <p class="speak-instruction">🗣️ Say this word in Thai:</p>
+        <div class="speak-prompt">
+          <div class="speak-english" id="speak-english">Hello</div>
+        </div>
+        <button class="mic-btn" id="mic-btn">
+          <span class="mic-icon">🎤</span>
+          <span class="mic-label">Tap to Speak</span>
+        </button>
+        <div class="speak-actions">
+          <button class="hint-btn" id="speak-hint-btn">💡 Show Hint</button>
+        </div>
+        <div class="speak-hint hidden" id="speak-hint">
+          <p><strong>Thai:</strong> <span id="speak-hint-thai">สวัสดี</span></p>
+          <p><strong>Romanized:</strong> <span id="speak-hint-romanized">sa-wat-dee</span></p>
+          <button class="hint-listen-btn" id="speak-hint-listen-btn">🔊 Listen</button>
+        </div>
+        <div class="speak-result hidden" id="speak-result">
+          <!-- Dynamically populated -->
+        </div>
+        <div class="speak-action-buttons">
+          <button class="retry-btn hidden" id="speak-retry-btn">🔄 Try Again</button>
+          <button class="next-btn hidden" id="speak-next-btn">Next →</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ VIEW: RESULTS ============ -->
+    <section id="view-results" class="view hidden">
+      <div class="results-container">
+        <div class="score-circle" id="results-score-circle">
+          <span class="score-number" id="results-score-number">85%</span>
+          <span class="score-detail" id="results-score-detail">13 out of 15 correct</span>
+        </div>
+        <div class="results-stars" id="results-stars"></div>
+        <p class="results-message" id="results-message">✅ Level Passed! Well done!</p>
+        <div class="results-actions">
+          <button class="btn-primary" id="results-next-btn">Next Level →</button>
+          <button class="btn-secondary" id="results-retry-btn">🔄 Try Again</button>
+          <button class="btn-secondary" id="results-home-btn">🏠 All Levels</button>
+        </div>
+        <div class="results-mistakes-section" id="results-mistakes-section">
+          <h3>📝 Review Mistakes</h3>
+          <div class="mistakes-list" id="results-mistakes">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer id="app-footer">
+    <p>Thai Language Learner • Use Chrome/Edge for best experience (speech features)</p>
+  </footer>
+
+  <script src="data.js"></script>
+  <script src="audio_manifest.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
