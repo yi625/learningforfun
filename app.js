@@ -19,6 +19,7 @@ const App = (() => {
     speakAnswers: [],
     progress: {},              // { levelId: { bestScore, completed, unlocked } }
     isRecording: false,
+    lastMode: 'quiz',          // 'quiz' | 'speak' | 'learn'
   };
 
   // ---- Progress Persistence ----
@@ -404,6 +405,7 @@ const App = (() => {
 
   // ---- Learn Mode ----
   function startLearnMode() {
+    state.lastMode = 'learn';
     state.currentCardIndex = 0;
     renderLearnCard();
     showView('learn');
@@ -468,6 +470,7 @@ const App = (() => {
 
   // ---- Listen & Translate Quiz ----
   function startQuizMode() {
+    state.lastMode = 'quiz';
     state.quizQuestions = generateQuizQuestions(state.currentLevel);
     state.currentQuizIndex = 0;
     state.quizScore = 0;
@@ -543,6 +546,7 @@ const App = (() => {
 
   // ---- Speak & Match Mode ----
   function startSpeakMode() {
+    state.lastMode = 'speak';
     if (!recognition) {
       const supported = initSpeechRecognition();
       if (!supported) {
@@ -772,6 +776,7 @@ const App = (() => {
 
   // ---- Results ----
   function showQuizResults(mode) {
+    state.lastMode = mode;
     const answers = mode === 'quiz' ? state.quizAnswers : state.speakAnswers;
     const score = mode === 'quiz' ? state.quizScore : state.speakScore;
     const total = answers.length;
@@ -848,14 +853,36 @@ const App = (() => {
   }
 
   // ---- Navigation ----
+  function retryCurrentMode() {
+    if (currentAudio) {
+      try { currentAudio.pause(); } catch(e) {}
+    }
+    try { speechSynthesis.cancel(); } catch(e) {}
+    stopListening();
+
+    if (state.lastMode === 'speak') {
+      startSpeakMode();
+    } else if (state.lastMode === 'learn') {
+      startLearnMode();
+    } else {
+      startQuizMode();
+    }
+  }
+
   function goToLevels() {
-    speechSynthesis.cancel();
+    if (currentAudio) {
+      try { currentAudio.pause(); } catch(e) {}
+    }
+    try { speechSynthesis.cancel(); } catch(e) {}
     stopListening();
     renderLevelSelect();
   }
 
   function goToModes() {
-    speechSynthesis.cancel();
+    if (currentAudio) {
+      try { currentAudio.pause(); } catch(e) {}
+    }
+    try { speechSynthesis.cancel(); } catch(e) {}
     stopListening();
     renderModeSelect();
   }
@@ -891,7 +918,7 @@ const App = (() => {
     document.getElementById('mode-quiz-btn').addEventListener('click', startQuizMode);
     document.getElementById('mode-speak-btn').addEventListener('click', startSpeakMode);
 
-    document.getElementById('results-retry-btn').addEventListener('click', goToModes);
+    document.getElementById('results-retry-btn').addEventListener('click', retryCurrentMode);
     document.getElementById('results-home-btn').addEventListener('click', goToLevels);
     document.getElementById('reset-progress-btn').addEventListener('click', resetProgress);
 
