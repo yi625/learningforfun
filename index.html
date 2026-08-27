@@ -10,6 +10,12 @@
 <body>
   <!-- ============ APP HEADER ============ -->
   <header id="app-header">
+    <div class="header-top">
+      <div class="user-profile-badge" id="user-profile-badge">
+        <span class="user-greeting-text" id="user-greeting-text">👋 สวัสดี (Hello), Student!</span>
+        <button class="edit-profile-btn" id="edit-profile-btn" title="Change your name">✏️</button>
+      </div>
+    </div>
     <h1 class="app-title">🇹🇭 Learn Thai from Nong Mint</h1>
     <p class="app-subtitle">Master Thai step by step — listen, speak, and translate</p>
     <div class="overall-progress">
@@ -177,6 +183,20 @@
     </section>
 
   </main>
+
+  <!-- ============ MODAL: USER PROFILE ============ -->
+  <div id="profile-modal" class="modal-overlay hidden">
+    <div class="modal-card">
+      <div class="modal-emoji">🙏</div>
+      <h2 class="modal-title">Welcome! ยินดีต้อนรับ</h2>
+      <p class="modal-subtitle">Welcome to Learn Thai from Nong Mint!</p>
+      <form id="profile-form">
+        <label for="user-name-input" class="modal-label">What is your name?</label>
+        <input type="text" id="user-name-input" class="modal-input" placeholder="e.g. Alex, John, Mint..." maxlength="25" autocomplete="name" required autofocus>
+        <button type="submit" class="modal-btn-submit">Start Learning 🚀</button>
+      </form>
+    </div>
+  </div>
 
   <footer id="app-footer">
     <p>Thai Language Learner • Use Chrome/Edge for best experience (speech features)</p>

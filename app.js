@@ -20,7 +20,70 @@ const App = (() => {
     progress: {},              // { levelId: { bestScore, completed, unlocked } }
     isRecording: false,
     lastMode: 'quiz',          // 'quiz' | 'speak' | 'learn'
+    userName: '',              // User's display name
   };
+
+  // ---- User Profile ----
+  function loadUserProfile() {
+    try {
+      const savedName = localStorage.getItem('thaiLearnerUserName');
+      if (savedName && savedName.trim()) {
+        state.userName = savedName.trim();
+        updateUserGreeting();
+      } else {
+        showProfileModal(true);
+      }
+    } catch(e) {
+      console.warn('Could not load user profile:', e);
+    }
+  }
+
+  function saveUserProfile(name) {
+    const cleanName = (name || '').trim();
+    if (!cleanName) return;
+    state.userName = cleanName;
+    try {
+      localStorage.setItem('thaiLearnerUserName', cleanName);
+    } catch(e) {}
+    updateUserGreeting();
+    hideProfileModal();
+    // Play a friendly Thai welcome greeting audio!
+    setTimeout(() => speak('ยินดีที่ได้รู้จัก'), 300);
+  }
+
+  function updateUserGreeting() {
+    const el = document.getElementById('user-greeting-text');
+    if (el) {
+      if (state.userName) {
+        el.innerHTML = `👋 สวัสดี, <strong>${escapeHtml(state.userName)}</strong>! Welcome!`;
+      } else {
+        el.innerHTML = `👋 สวัสดี, Student! Welcome!`;
+      }
+    }
+  }
+
+  function showProfileModal(isFirstTime = false) {
+    const modal = document.getElementById('profile-modal');
+    const input = document.getElementById('user-name-input');
+    if (modal && input) {
+      input.value = state.userName || '';
+      modal.classList.remove('hidden');
+      setTimeout(() => input.focus(), 150);
+    }
+  }
+
+  function hideProfileModal() {
+    const modal = document.getElementById('profile-modal');
+    if (modal) {
+      modal.classList.add('hidden');
+    }
+  }
+
+  function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
 
   // ---- Progress Persistence ----
   function loadProgress() {
@@ -911,8 +974,24 @@ const App = (() => {
   // ---- Initialization ----
   function init() {
     loadProgress();
+    loadUserProfile();
     initTTS();
     initSpeechRecognition();
+
+    // Profile listeners
+    const profileForm = document.getElementById('profile-form');
+    if (profileForm) {
+      profileForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const input = document.getElementById('user-name-input');
+        saveUserProfile(input.value);
+      });
+    }
+
+    const editProfileBtn = document.getElementById('edit-profile-btn');
+    if (editProfileBtn) {
+      editProfileBtn.addEventListener('click', () => showProfileModal(false));
+    }
 
     // Event listeners
     document.getElementById('learn-prev').addEventListener('click', learnPrev);
