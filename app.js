@@ -438,6 +438,13 @@ const App = (() => {
       });
       dotsContainer.appendChild(dot);
     }
+
+    // Auto-play Thai sound on card change
+    setTimeout(() => {
+      if (state.currentView === 'learn') {
+        speak(word.thai);
+      }
+    }, 200);
   }
 
   function learnNext() {
