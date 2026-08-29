@@ -232,6 +232,104 @@ const App = (() => {
     }, 150);
   }
 
+  // Comprehensive Single-Word Homophone & Phonetic Map for Kids
+  const CHINESE_HOMOPHONES = {
+    '少': ['少', '烧', '稍', '勺', '绍', '哨', '稍后', '多少', '减少', 'shao', 'show', 'shall'],
+    '多': ['多', '朵', '躲', '夺', '堕', '多久', '多少', 'duo', 'door'],
+    '大': ['大', '达', '打', '搭', '答', '哒', '大人', '大家', 'da', 'big'],
+    '小': ['小', '消', '销', '笑', '效', '校', '晓', '小孩', 'xiao', 'small'],
+    '高': ['高', '搞', '告', '稿', '膏', '糕', '个子高', 'gao', 'tall'],
+    '矮': ['矮', '哎', '爱', '哀', '埃', '挨', '矮小', 'ai', 'eye', 'short'],
+    '快': ['快', '块', '筷', '会', '快速', 'kuai', 'fast'],
+    '慢': ['慢', '满', '曼', '漫', '慢慢', 'man', 'slow'],
+    '冷': ['冷', '愣', 'leng', 'cold'],
+    '热': ['热', '惹', 're', 'hot'],
+    '晴': ['晴', '情', '请', '清', 'qing', 'sunny'],
+    '雨': ['雨', '语', '与', '羽', '下雨', 'yu', 'rain'],
+    '风': ['风', '封', '丰', '刮风', 'feng', 'wind'],
+    '雪': ['雪', '学', '血', '下雪', 'xue', 'snow'],
+    '跑': ['跑', '泡', '跑步', 'pao', 'run'],
+    '跳': ['跳', '条', '跳绳', 'tiao', 'jump'],
+    '游': ['游', '由', '游泳', 'you', 'swim'],
+    '书': ['书', '树', '叔', '看书', 'shu', 'book'],
+    '笔': ['笔', '比', '币', '铅笔', 'bi', 'pen'],
+    '本': ['本', '笨', '课本', 'ben', 'book'],
+    '尺': ['尺', '吃', '齿', '尺子', 'chi', 'ruler'],
+    '读': ['读', '独', '毒', '度', '读书', 'du', 'read'],
+    '写': ['写', '鞋', '谢', '邪', '写字', 'xie', 'write'],
+    '吃': ['吃', '痴', '池', '吃饭', 'chi', 'eat'],
+    '喝': ['喝', '合', '河', '何', '喝水', 'he', 'drink'],
+    '一': ['一', '1', '依', '衣', '医', '已', '以', '亿', 'yi', 'one'],
+    '二': ['二', '2', '两', '饿', '而', '儿', 'er', 'liang', 'two'],
+    '三': ['三', '3', '山', '伞', '散', 'san', 'three'],
+    '四': ['四', '4', '是', '事', '市', '十', 'si', 'four'],
+    '五': ['五', '5', '屋', '武', '物', '舞', 'wu', 'five'],
+    '六': ['六', '6', '留', '流', '柳', 'liu', 'six'],
+    '七': ['七', '7', '期', '妻', '齐', '起', '气', 'qi', 'seven'],
+    '八': ['八', '8', '吧', '爸', '巴', '把', '拔', 'ba', 'eight'],
+    '九': ['九', '9', '酒', '久', '就', '救', 'jiu', 'nine'],
+    '十': ['十', '10', '石', '拾', '实', '识', '时', 'shi', 'ten'],
+    '猫': ['猫', '毛', '冒', '帽', '小猫', 'mao', 'cat'],
+    '狗': ['狗', '够', '购', '勾', '小狗', 'gou', 'go', 'dog'],
+    '鸟': ['鸟', '袅', '小鸟', 'niao', 'bird'],
+    '鱼': ['鱼', '于', '余', '小鱼', 'yu', 'fish'],
+    '爸': ['爸', '八', '吧', '爸爸', 'ba', 'baba', 'dad'],
+    '妈': ['妈', '麻', '马', '妈妈', 'ma', 'mama', 'mom'],
+    '红': ['红', '洪', '鸿', '宏', '红色', 'hong', 'red'],
+    '蓝': ['蓝', '兰', '篮', '蓝色', 'lan', 'blue'],
+    '黄': ['黄', '皇', '黄色', 'huang', 'yellow']
+  };
+
+  function normalizeTonePinyin(str) {
+    if (!str) return '';
+    return str
+      .replace(/[āáǎà]/g, 'a')
+      .replace(/[ēéěè]/g, 'e')
+      .replace(/[īíǐì]/g, 'i')
+      .replace(/[ōóǒò]/g, 'o')
+      .replace(/[ūúǔù]/g, 'u')
+      .replace(/[ǖǘǚǜ]/g, 'v')
+      .replace(/[^a-z0-9]/gi, '')
+      .toLowerCase();
+  }
+
+  function chineseMatch(spoken, expectedWord) {
+    if (!spoken || !expectedWord) return false;
+    const expected = expectedWord.hanzi || expectedWord;
+    const pinyinRaw = expectedWord.pinyin || '';
+    const normSpoken = normalizeChinese(spoken);
+    const normExpected = normalizeChinese(expected);
+    const cleanPinyin = normalizeTonePinyin(pinyinRaw);
+    const spokenPinyin = normalizeTonePinyin(spoken);
+
+    // 1. Direct exact or substring match
+    if (normSpoken === normExpected || normSpoken.includes(normExpected) || normExpected.includes(normSpoken)) return true;
+
+    // 2. Single-character homophone table match
+    if (CHINESE_HOMOPHONES[expected]) {
+      const homophones = CHINESE_HOMOPHONES[expected];
+      for (const h of homophones) {
+        const normH = normalizeChinese(h);
+        if (normSpoken === normH || normSpoken.includes(normH) || normH.includes(normSpoken)) {
+          return true;
+        }
+      }
+    }
+
+    // 3. Pinyin phonetic match (with & without tone marks)
+    if (cleanPinyin && (spokenPinyin.includes(cleanPinyin) || cleanPinyin.includes(spokenPinyin))) {
+      return true;
+    }
+
+    // 4. Number match
+    const numberMap = { '一':'1', '二':'2', '三':'3', '四':'4', '五':'5', '六':'6', '七':'7', '八':'8', '九':'9', '十':'10' };
+    if (numberMap[normExpected] && (normSpoken.includes(numberMap[normExpected]) || normSpoken === numberMap[normExpected])) {
+      return true;
+    }
+
+    return false;
+  }
+
   // ---- Speech Recognition (Mandarin) ----
   function initSpeechRecognition() {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -247,7 +345,7 @@ const App = (() => {
     return true;
   }
 
-  function startListening() {
+  function startListening(targetWord) {
     return new Promise((resolve, reject) => {
       if (!recognition) {
         const ok = initSpeechRecognition();
@@ -277,18 +375,40 @@ const App = (() => {
       recognition.onresult = (event) => {
         let finalTranscript = '';
         let interimTranscript = '';
+        const allCandidates = [];
 
         for (let i = event.resultIndex; i < event.results.length; i++) {
-          const transcript = event.results[i][0].transcript.trim();
-          if (event.results[i].isFinal) {
-            finalTranscript += transcript;
+          const res = event.results[i];
+          for (let j = 0; j < res.length; j++) {
+            allCandidates.push(res[j].transcript.trim());
+          }
+          if (res.isFinal) {
+            finalTranscript += res[0].transcript.trim();
           } else {
-            interimTranscript += transcript;
+            interimTranscript += res[0].transcript.trim();
           }
         }
 
-        if (interimTranscript) {
-          interimResult = interimTranscript;
+        const candidateText = finalTranscript || interimTranscript;
+        if (candidateText) {
+          interimResult = candidateText;
+
+          // Instant real-time match for single words & phrases!
+          if (targetWord) {
+            for (const cand of allCandidates) {
+              if (chineseMatch(cand, targetWord)) {
+                settled = true;
+                clearTimeout(timeoutId);
+                if (autoStopTimer) clearTimeout(autoStopTimer);
+                try { recognition.stop(); } catch(e) {}
+                state.isRecording = false;
+                updateMicButton();
+                resolve([cand]);
+                return;
+              }
+            }
+          }
+
           if (autoStopTimer) clearTimeout(autoStopTimer);
           autoStopTimer = setTimeout(() => {
             if (!settled) {
@@ -297,24 +417,17 @@ const App = (() => {
               try { recognition.stop(); } catch(e) {}
               state.isRecording = false;
               updateMicButton();
-              resolve([interimResult]);
+              resolve(allCandidates.length ? allCandidates : [interimResult]);
             }
-          }, 1600);
+          }, 1200);
         }
 
         if (finalTranscript && !settled) {
           settled = true;
           clearTimeout(timeoutId);
           if (autoStopTimer) clearTimeout(autoStopTimer);
-          const results = [];
-          if (event.results[0]) {
-            for (let i = 0; i < event.results[0].length; i++) {
-              results.push(event.results[0][i].transcript.trim());
-            }
-          }
-          if (results.length === 0) results.push(finalTranscript);
           try { recognition.stop(); } catch(e) {}
-          resolve(results);
+          resolve(allCandidates.length ? allCandidates : [finalTranscript]);
         }
       };
 
@@ -386,40 +499,6 @@ const App = (() => {
       .replace(/[，。！？、]/g, '')
       .toLowerCase()
       .trim();
-  }
-
-  function chineseMatch(spoken, expectedWord) {
-    const expected = expectedWord.hanzi;
-    const pinyin = expectedWord.pinyin ? expectedWord.pinyin.replace(/[āáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜ]/g, (m) => {
-      // Normalize tone vowels for fallback
-      const map = {
-        'ā':'a','á':'a','ǎ':'a','à':'a',
-        'ē':'e','é':'e','ě':'e','è':'e',
-        'ī':'i','í':'i','ǐ':'i','ì':'i',
-        'ō':'o','ó':'o','ǒ':'o','ò':'o',
-        'ū':'u','ú':'u','ǔ':'u','ù':'u'
-      };
-      return map[m] || m;
-    }) : '';
-
-    const normSpoken = normalizeChinese(spoken);
-    const normExpected = normalizeChinese(expected);
-    const normPinyin = normalizeChinese(pinyin);
-
-    // 1. Exact match
-    if (normSpoken === normExpected) return true;
-
-    // 2. Contains expected Hanzi
-    if (normSpoken.includes(normExpected)) return true;
-
-    // 3. Pinyin match
-    if (normPinyin && (normSpoken.includes(normPinyin) || normPinyin.includes(normSpoken))) return true;
-
-    // 4. Number match (e.g. 1 vs 一, 10 vs 十)
-    const numberMap = { '一':'1', '二':'2', '三':'3', '四':'4', '五':'5', '六':'6', '七':'7', '八':'8', '九':'9', '十':'10' };
-    if (numberMap[normExpected] && normSpoken.includes(numberMap[normExpected])) return true;
-
-    return false;
   }
 
   // ---- Navigation Views ----
@@ -876,7 +955,7 @@ const App = (() => {
     const nextBtn = document.getElementById('speak-next-btn');
 
     try {
-      const results = await startListening();
+      const results = await startListening(q.word);
       let isMatch = false;
       let heard = results[0] || '';
 
