@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🐼 华语乐园 (Chinese for Kids) — 幼教至三年级趣味学中文</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Noto+Sans+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <!-- ============ APP HEADER ============ -->
+  <header id="app-header">
+    <div class="header-inner">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; flex-wrap: wrap; gap: 0.5rem;">
+        <a href="../" class="lang-switch-btn" style="text-decoration: none; font-size: 0.85rem; font-weight: 700; color: #E8833A; background: #FFF4E6; padding: 0.35rem 0.85rem; border-radius: 20px; border: 1px solid #FFE0B2;">🇹🇭 Learn Thai (泰语学习) ➔</a>
+        <!-- Child Profile Badge -->
+        <div class="user-profile-badge" id="user-profile-badge" style="margin-bottom: 0;">
+          <span class="user-avatar">🧒</span>
+          <span class="user-greeting-text" id="user-greeting-text">👋 你好 (Hello), 小朋友 (Student)!</span>
+          <button class="edit-profile-btn" id="edit-profile-btn" title="修改名字 (Edit Name)">✏️</button>
+        </div>
+      </div>
+
+      <!-- Mascot Greeting -->
+      <div class="mascot-bar">
+        <div class="mascot-avatar" id="mascot-avatar">🐼</div>
+        <div class="mascot-speech" id="mascot-speech">
+          <p>我是<strong>熊猫宝宝 (Panda Bao Bao)</strong>！一起来快乐学华语吧！(Let's learn Chinese together!) 🎉</p>
+        </div>
+        <!-- Total Stars Badge -->
+        <div class="star-badge" id="star-badge" title="获得的星星总数 (Total Stars Earned)">
+          <span class="star-icon">⭐</span>
+          <span class="star-count" id="total-stars-count">0</span>
+        </div>
+      </div>
+
+      <!-- App Title -->
+      <h1 class="app-title">🐼 华语乐园 <span class="title-en">Chinese for Kids</span></h1>
+      <p class="app-subtitle">幼教启蒙至三年级 • 听、说、读、写、认轻松掌握 (Preschool to Grade 3 • Listen, Speak, Read, Write & Learn)</p>
+      
+      <!-- Overall Progress -->
+      <div class="overall-progress-box">
+        <div class="progress-bar">
+          <div class="progress-bar-fill" id="overall-progress-fill"></div>
+        </div>
+        <span class="progress-label" id="overall-progress-text">学习进度 (Progress): 0%</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ============ MAIN CONTENT AREA ============ -->
+  <main id="app-main">
+
+    <!-- ============ VIEW 1: LEVEL WORLDS (关卡天地) ============ -->
+    <section id="view-levels" class="view">
+      <div class="section-title-wrap">
+        <h2>🗺️ 选择关卡 (Choose a Level)</h2>
+        <button class="reset-btn" id="reset-progress-btn" title="重置学习进度 (Reset Progress)">🔄 重置 (Reset)</button>
+      </div>
+      <div class="level-grid" id="level-grid">
+        <!-- Dynamically Populated with Level Cards -->
+      </div>
+    </section>
+
+    <!-- ============ VIEW 2: MODE SELECT (选择玩法) ============ -->
+    <section id="view-modes" class="view hidden">
+      <button class="back-btn back-to-levels">← 返回关卡 (Back to Levels)</button>
+      
+      <div class="mode-header">
+        <div class="mode-level-badge" id="mode-level-badge">🌱 Level 1</div>
+        <h2 id="mode-level-title">幼教启蒙篇 (Preschool Basics)</h2>
+        <p id="mode-level-desc">数字、颜色、家庭成员与可爱动物 (Numbers, Colors, Family & Animals)</p>
+      </div>
+
+      <div class="mode-cards-grid">
+        <!-- Mode 1: Flashcards -->
+        <button class="mode-card mode-learn" id="mode-learn-btn">
+          <div class="mode-card-icon">🎴</div>
+          <div class="mode-card-info">
+            <span class="mode-card-title">看卡片学汉字</span>
+            <span class="mode-card-sub">Flashcard Explorer</span>
+            <span class="mode-card-desc">看图认字，听纯正汉语发音 (Read & listen to pronunciation)</span>
+          </div>
+          <div class="mode-play-arrow">▶</div>
+        </button>
+
+        <!-- Mode 2: Picture Quiz -->
+        <button class="mode-card mode-quiz" id="mode-quiz-btn">
+          <div class="mode-card-icon">🎮</div>
+          <div class="mode-card-info">
+            <span class="mode-card-title">看图听音选一选</span>
+            <span class="mode-card-sub">Picture Quiz</span>
+            <span class="mode-card-desc">听声音，选出对应的可爱图片 (Listen & pick the matching picture)</span>
+          </div>
+          <div class="mode-play-arrow">▶</div>
+        </button>
+
+        <!-- Mode 3: Speak & Match -->
+        <button class="mode-card mode-speak" id="mode-speak-btn">
+          <div class="mode-card-icon">🎤</div>
+          <div class="mode-card-info">
+            <span class="mode-card-title">跟熊猫大声读</span>
+            <span class="mode-card-sub">Speak with Panda</span>
+            <span class="mode-card-desc">看英文，用麦克风大声读出中文 (Speak Chinese into mic)</span>
+          </div>
+          <div class="mode-play-arrow">▶</div>
+        </button>
+
+        <!-- Mode 4: Write & Trace -->
+        <button class="mode-card mode-write" id="mode-write-btn">
+          <div class="mode-card-icon">✍️</div>
+          <div class="mode-card-info">
+            <span class="mode-card-title">趣味写汉字</span>
+            <span class="mode-card-sub">Write & Trace</span>
+            <span class="mode-card-desc">在田字格上一笔一画描红学写字 (Trace & write on Tianzige)</span>
+          </div>
+          <div class="mode-play-arrow">▶</div>
+        </button>
+      </div>
+    </section>
+
+    <!-- ============ VIEW 3: LEARN FLASHCARDS (卡片世界) ============ -->
+    <section id="view-learn" class="view hidden">
+      <div class="game-topbar">
+        <button class="back-btn back-to-modes">← 返回玩法 (Back to Modes)</button>
+        <span class="card-counter" id="learn-card-counter">1 / 26</span>
+      </div>
+
+      <div class="learn-card-container">
+        <div class="kid-flashcard" id="kid-flashcard">
+          <span class="card-category-tag" id="learn-category">数字 Number</span>
+          <div class="card-emoji" id="learn-emoji">🍎</div>
+          
+          <div class="card-pinyin" id="learn-pinyin">píng guǒ</div>
+          <div class="card-hanzi" id="learn-hanzi">苹果</div>
+          
+          <div class="card-divider"></div>
+          <div class="card-english" id="learn-english">Apple</div>
+
+          <!-- Listen Again Button -->
+          <button class="kid-listen-btn" id="learn-speak-btn">
+            <span class="sound-wave">🔊</span> 再听一次 (Listen Again)
+          </button>
+        </div>
+
+        <!-- Navigation buttons -->
+        <div class="learn-controls">
+          <button class="nav-arrow-btn" id="learn-prev">‹ 上一个 (Prev)</button>
+          <div class="learn-dots-wrap" id="learn-dots"></div>
+          <button class="nav-arrow-btn" id="learn-next">下一个 (Next) ›</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ VIEW 4: PICTURE QUIZ (看图猜一猜) ============ -->
+    <section id="view-quiz" class="view hidden">
+      <div class="game-topbar">
+        <button class="back-btn back-to-modes">← 返回玩法 (Back to Modes)</button>
+        <div class="game-stats">
+          <span class="stat-score" id="quiz-score-badge">⭐ 0/0</span>
+          <span class="stat-progress" id="quiz-progress-text">第 1 题 / 共 15 题 (Question 1 of 15)</span>
+        </div>
+      </div>
+
+      <div class="quiz-container">
+        <!-- Audio prompt banner -->
+        <div class="quiz-sound-prompt">
+          <p class="quiz-instruction-text">🎧 听声音，点击正确的图片 (Listen & pick the matching picture):</p>
+          <button class="quiz-replay-sound-btn" id="quiz-replay-btn">
+            <span>🔊 播放声音 (Play Sound)</span>
+          </button>
+        </div>
+
+        <!-- 4 Picture Option Cards -->
+        <div class="picture-options-grid" id="quiz-options-grid">
+          <!-- Dynamically populated 4 options with Emojis & Pinyin/English -->
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ VIEW 5: SPEAK WITH PANDA (跟熊猫读) ============ -->
+    <section id="view-speak" class="view hidden">
+      <div class="game-topbar">
+        <button class="back-btn back-to-modes">← 返回玩法 (Back to Modes)</button>
+        <div class="game-stats">
+          <span class="stat-score" id="speak-score-badge">⭐ 0/0</span>
+          <span class="stat-progress" id="speak-progress-text">第 1 题 / 共 15 题 (Question 1 of 15)</span>
+        </div>
+      </div>
+
+      <div class="speak-container">
+        <div class="speak-prompt-card">
+          <span class="speak-hint-tag">🗣️ 请用中文读出 (Say in Chinese):</span>
+          <div class="speak-target-emoji" id="speak-target-emoji">🐱</div>
+          <h2 class="speak-target-english" id="speak-target-english">Cat</h2>
+
+          <!-- Hint Toggle Button -->
+          <button class="speak-help-btn" id="speak-hint-btn">💡 提示 (Show Hint)</button>
+          
+          <div class="speak-hint-box hidden" id="speak-hint-box">
+            <span class="hint-pinyin" id="speak-hint-pinyin">māo</span>
+            <span class="hint-hanzi" id="speak-hint-hanzi">猫</span>
+            <button class="hint-audio-btn" id="speak-hint-listen-btn">🔊 听读音 (Listen)</button>
+          </div>
+        </div>
+
+        <!-- Big Bouncing Mic Button -->
+        <div class="mic-area">
+          <button class="big-mic-btn" id="mic-btn">
+            <span class="mic-emoji">🎤</span>
+            <span class="mic-text">点我说话 (Tap & Speak)</span>
+          </button>
+        </div>
+
+        <!-- Result Feedback Banner -->
+        <div class="speak-feedback hidden" id="speak-feedback">
+          <!-- Populated with match result -->
+        </div>
+
+        <div class="speak-actions-row">
+          <button class="btn-retry hidden" id="speak-retry-btn">🔄 再试一次 (Try Again)</button>
+          <button class="btn-next hidden" id="speak-next-btn">下一题 (Next) ›</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ VIEW 6: RESULTS & CELEBRATION (成绩与奖励) ============ -->
+    <section id="view-results" class="view hidden">
+      <div class="results-celebration-card">
+        <div class="results-mascot" id="results-mascot">🎉🐼🎉</div>
+        <h2 class="results-title" id="results-title">太棒了！闯关成功！(Level Passed!)</h2>
+        
+        <!-- Animated Star Rating -->
+        <div class="results-stars-row" id="results-stars-row">
+          <span class="big-star">⭐</span>
+          <span class="big-star">⭐</span>
+          <span class="big-star">⭐</span>
+        </div>
+
+        <div class="results-score-box">
+          <span class="results-pct" id="results-pct">100%</span>
+          <span class="results-detail" id="results-detail">答对 (Correct): 15 / 15 题 (Questions)</span>
+        </div>
+
+        <p class="results-encouragement" id="results-encouragement">你真是个华语小天才！继续加油！(You are a Chinese superstar! Keep it up!)</p>
+
+        <!-- Action Buttons -->
+        <div class="results-buttons">
+          <button class="btn-celebrate-next" id="results-next-btn">🚀 挑战下一关 (Next Level)</button>
+          <button class="btn-celebrate-retry" id="results-retry-btn">🔄 再玩一次 (Play Again)</button>
+          <button class="btn-celebrate-home" id="results-home-btn">🏠 返回关卡 (All Levels)</button>
+        </div>
+
+        <!-- Review Mistakes Section -->
+        <div class="mistakes-container hidden" id="results-mistakes-section">
+          <h3>📝 复习错题 (Review Mistakes)</h3>
+          <div class="mistakes-list" id="results-mistakes-list">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ VIEW 7: WRITE & TRACE (趣味写汉字) ============ -->
+    <section id="view-write" class="view hidden">
+      <div class="game-topbar">
+        <button class="back-btn back-to-modes">← 返回玩法 (Back to Modes)</button>
+        <span class="card-counter" id="write-card-counter">1 / 26</span>
+      </div>
+
+      <div class="write-container">
+        <!-- Word Header Info -->
+        <div class="write-word-info">
+          <span class="write-emoji" id="write-emoji">🍎</span>
+          <div class="write-text-wrap">
+            <span class="write-pinyin" id="write-pinyin">píng guǒ</span>
+            <span class="write-english" id="write-english">Apple</span>
+          </div>
+          <button class="write-listen-btn" id="write-speak-btn">🔊 听读音 (Listen)</button>
+        </div>
+
+        <!-- Tianzige Canvas Card -->
+        <div class="tianzige-card">
+          <div class="tianzige-box" id="tianzige-box">
+            <!-- Background Dotted Tianzige Grid -->
+            <div class="tianzige-grid">
+              <div class="grid-cross-h"></div>
+              <div class="grid-cross-v"></div>
+            </div>
+            <!-- Ghost tracing watermark -->
+            <div class="tianzige-watermark" id="write-watermark">苹果</div>
+            <!-- Drawing Canvas -->
+            <canvas id="write-canvas" width="320" height="320"></canvas>
+          </div>
+        </div>
+
+        <!-- Drawing Tools -->
+        <div class="write-tools-bar">
+          <!-- Color Picker -->
+          <div class="color-palette">
+            <button class="color-btn active" data-color="#2D3436" style="background: #2D3436;" title="黑色 Black"></button>
+            <button class="color-btn" data-color="#FF6B6B" style="background: #FF6B6B;" title="红色 Red"></button>
+            <button class="color-btn" data-color="#4ECDC4" style="background: #4ECDC4;" title="蓝色 Blue"></button>
+            <button class="color-btn" data-color="#6BCB77" style="background: #6BCB77;" title="绿色 Green"></button>
+            <button class="color-btn" data-color="#6C5CE7" style="background: #6C5CE7;" title="紫色 Purple"></button>
+            <button class="color-btn" data-color="#FFA502" style="background: #FFA502;" title="橙色 Orange"></button>
+          </div>
+
+          <!-- Actions -->
+          <div class="write-actions-btns">
+            <button class="tool-btn" id="write-guide-toggle" title="隐藏/显示描红辅助 (Toggle Outline Guide)">👁️ 描红线 (Guide)</button>
+            <button class="tool-btn" id="write-clear-btn" title="清空画布 (Clear Canvas)">🧽 重写 (Clear)</button>
+            <button class="tool-btn btn-finish" id="write-finish-btn" title="我写好了！(I'm Done!)">⭐ 我写好了！(Done!)</button>
+          </div>
+        </div>
+
+        <!-- Navigation Controls -->
+        <div class="learn-controls">
+          <button class="nav-arrow-btn" id="write-prev">‹ 上一个 (Prev)</button>
+          <div class="learn-dots-wrap" id="write-dots"></div>
+          <button class="nav-arrow-btn" id="write-next">下一个 (Next) ›</button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ============ MODAL: USER WELCOME (输入小朋友名字) ============ -->
+  <div id="profile-modal" class="modal-overlay hidden">
+    <div class="modal-card">
+      <div class="modal-panda-head">🐼</div>
+      <h2 class="modal-title">欢迎来到华语乐园！</h2>
+      <p class="modal-subtitle">Welcome to Chinese for Kids!</p>
+      
+      <form id="profile-form">
+        <label for="user-name-input" class="modal-label">小朋友，你叫什么名字呀？<br><span class="label-sub">(What is your name?)</span></label>
+        <input type="text" id="user-name-input" class="modal-input" placeholder="e.g. Hanna, Alex, Emma..." maxlength="20" required autofocus>
+        <button type="submit" class="modal-start-btn">开始快乐学中文 (Start Learning) 🚀</button>
+      </form>
+    </div>
+  </div>
+
+  <footer id="app-footer">
+    <p>🐼 华语乐园 Chinese for Kids • 零基础趣味学华语 (Fun Mandarin Learning for Beginners) • Preschool to Grade 3</p>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="data.js"></script>
+  <script src="audio_manifest.js"></script>
+  <script src="sound_effects.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
