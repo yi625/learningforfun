@@ -282,6 +282,46 @@
           <button class="write-listen-btn" id="write-speak-btn">🔊 听读音 (Listen)</button>
         </div>
 
+        <!-- Multi-character selector tabs (if word has multiple Hanzi) -->
+        <div class="char-tabs-row hidden" id="write-char-tabs">
+          <!-- Populated dynamically: [ 苹 ] [ 果 ] -->
+        </div>
+
+        <!-- Stroke Order & Arrow Demo Section (笔画顺序与方向箭头) -->
+        <div class="stroke-order-card" id="stroke-order-card">
+          <div class="stroke-demo-left">
+            <div class="stroke-anim-box" id="stroke-anim-target"></div>
+            <button class="stroke-play-btn" id="stroke-play-btn" title="播放笔顺动画 (Play Stroke Order)">
+              <span>▶ 笔画演示 (Play Strokes)</span>
+            </button>
+          </div>
+          <div class="stroke-info-right">
+            <div class="stroke-badge-tag" id="stroke-count-tag">✏️ 笔画顺序 (Stroke Order)</div>
+            <div class="stroke-steps-list" id="stroke-steps-list">
+              <!-- Dynamically populated: 1. 竖丨 2. 横折𠃍 3. 撇丿... -->
+            </div>
+          </div>
+        </div>
+
+        <!-- 3 Writing Practice Boxes Nav (练习 3 遍: 描红 -> 临摹 -> 自写) -->
+        <div class="write-boxes-nav">
+          <button type="button" class="write-box-tab active" data-box="1" id="write-box-tab-1">
+            <span class="box-num">1</span>
+            <span class="box-text">第 1 遍: 描红 (Trace)</span>
+            <span class="box-star" id="box-star-1">☆</span>
+          </button>
+          <button type="button" class="write-box-tab" data-box="2" id="write-box-tab-2">
+            <span class="box-num">2</span>
+            <span class="box-text">第 2 遍: 临摹 (Practice)</span>
+            <span class="box-star" id="box-star-2">☆</span>
+          </button>
+          <button type="button" class="write-box-tab" data-box="3" id="write-box-tab-3">
+            <span class="box-num">3</span>
+            <span class="box-text">第 3 遍: 自写 (Free Hand)</span>
+            <span class="box-star" id="box-star-3">☆</span>
+          </button>
+        </div>
+
         <!-- Tianzige Canvas Card -->
         <div class="tianzige-card">
           <div class="tianzige-box" id="tianzige-box">
@@ -291,7 +331,7 @@
               <div class="grid-cross-v"></div>
             </div>
             <!-- Ghost tracing watermark -->
-            <div class="tianzige-watermark" id="write-watermark">苹果</div>
+            <div class="tianzige-watermark" id="write-watermark">四</div>
             <!-- Drawing Canvas -->
             <canvas id="write-canvas" width="320" height="320"></canvas>
           </div>
@@ -313,7 +353,7 @@
           <div class="write-actions-btns">
             <button class="tool-btn" id="write-guide-toggle" title="隐藏/显示描红辅助 (Toggle Outline Guide)">👁️ 描红线 (Guide)</button>
             <button class="tool-btn" id="write-clear-btn" title="清空画布 (Clear Canvas)">🧽 重写 (Clear)</button>
-            <button class="tool-btn btn-finish" id="write-finish-btn" title="我写好了！(I'm Done!)">⭐ 我写好了！(Done!)</button>
+            <button class="tool-btn btn-finish" id="write-finish-btn" title="完成当前格 (Complete Box)">⭐ 我写好了！(Done!)</button>
           </div>
         </div>
 
@@ -370,6 +410,7 @@
   </footer>
 
   <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.5/dist/hanzi-writer.min.js"></script>
   <script src="data.js"></script>
   <script src="audio_manifest.js"></script>
   <script src="sound_effects.js"></script>

@@ -9,6 +9,9 @@ const App = (() => {
     currentLevel: null,
     currentCardIndex: 0,
     currentWriteIndex: 0,
+    currentBoxIndex: 1,
+    boxCompleted: { 1: false, 2: false, 3: false },
+    currentCharIndex: 0,
     currentColor: '#2D3436',
     isDrawing: false,
     lastX: 0,
@@ -731,10 +734,115 @@ const App = (() => {
     }
   }
 
+  // ---- Stroke Order Breakdown Dictionary ----
+  const STROKE_DATA = {
+    '一': ['一 (横 Horizontal ➔)'],
+    '二': ['一 (上横 Top ➔)', '一 (下横 Bottom ➔)'],
+    '三': ['一 (上横 ➔)', '一 (中横 ➔)', '一 (下长横 ➔)'],
+    '四': ['丨 (竖 Down ↓)', '𠃍 (横折 Across & Down ➔↓)', '丿 (撇 Left Slant ↙)', '乚 (竖折 Down & Right └)', '一 (底横 Bottom ➔)'],
+    '五': ['一 (上横 ➔)', '丨 (竖 ↓)', '𠃍 (横折 ➔↓)', '一 (底横 ➔)'],
+    '六': ['丶 (点 Dot ↘)', '一 (横 ➔)', '丿 (撇 ↙)', '丶 (点 ↘)'],
+    '七': ['一 (横 ➔)', '乚 (竖弯钩 ↳)'],
+    '八': ['丿 (撇 ↙)', '丶 (捺 ↘)'],
+    '九': ['丿 (撇 ↙)', '𠃌 (横折弯钩 ➔↳)'],
+    '十': ['一 (横 ➔)', '丨 (竖 ↓)'],
+    '大': ['一 (横 ➔)', '丿 (撇 ↙)', '丶 (捺 ↘)'],
+    '小': ['亅 (竖钩 ↓)', '丿 (撇 ↙)', '丶 (点 ↘)'],
+    '多': ['丿 (撇 ↙)', '㇇ (横撇 ➔↙)', '丶 (点 ↘)', '丿 (撇 ↙)', '㇇ (横撇 ➔↙)', '丶 (点 ↘)'],
+    '少': ['丨 (中竖 ↓)', '丿 (左撇 ↙)', '丶 (右点 ↘)', '丿 (长撇 ↙)'],
+    '高': ['丶 (点 ↘)', '一 (横 ➔)', '丨 (竖 ↓)', '𠃍 (横折 ➔↓)', '一 (横 ➔)', '丨 (竖 ↓)', '𠃍 (横折 ➔↓)', '一 (横 ➔)'],
+    '矮': ['丿 (撇 ↙)', '一 (横 ➔)', '丨 (竖 ↓)', '丿 (撇 ↙)', '丶 (点 ↘)', '丿 (撇 ↙)', '一 (横 ➔)', '丨 (竖 ↓)', '𠃍 (横折 ➔↓)', '一 (横 ➔)', '女 (女部 3画)'],
+    '快': ['丶 (点 ↘)', '丨 (竖 ↓)', '丶 (点 ↘)', '𠃍 (横折 ➔↓)', '一 (横 ➔)', '丿 (撇 ↙)', '丶 (捺 ↘)'],
+    '慢': ['丶 (点 ↘)', '丨 (竖 ↓)', '丶 (点 ↘)', '日 (4画)', '罒 (5画)', '又 (2画)'],
+    '猫': ['丿 (撇 ↙)', '㇁ (弯钩 ↳)', '丿 (撇 ↙)', '艹 (3画)', '田 (5画)'],
+    '狗': ['丿 (撇 ↙)', '㇁ (弯钩 ↳)', '丿 (撇 ↙)', '勹 (2画)', '口 (3画)'],
+    '鸟': ['丿 (撇 ↙)', '𠃍 (横折 ➔↓)', '丶 (点 ↘)', '𠃍 (横折 ➔↓)', '一 (底横 ➔)'],
+    '鱼': ['丿 (撇 ↙)', '𠃍 (横折 ➔↓)', '田 (5画)', '一 (长横 ➔)'],
+    '爸': ['丿 (撇 ↙)', '丶 (捺 ↘)', '丿 (撇 ↙)', '丶 (捺 ↘)', '巴 (4画)'],
+    '妈': ['女 (3画)', '马 (3画)'],
+    '红': ['𠃋 (撇折 ↙➔)', '𠃋 (撇折 ↙➔)', '㇀ (提 ↗)', '一 (横 ➔)', '丨 (竖 ↓)', '一 (横 ➔)'],
+    '蓝': ['艹 (3画)', '监 (10画)'],
+    '黄': ['廿 (4画)', '一 (1画)', '由 (5画)', '八 (2画)'],
+    '吃': ['口 (3画)', '乞 (3画)'],
+    '喝': ['口 (3画)', '日 (4画)', '勹 (2画)', '人 (2画)'],
+    '读': ['讠 (2画)', '十 (2画)', '买 (6画)'],
+    '写': ['冖 (2画)', '与 (3画)']
+  };
+
+  let hanziWriterInstance = null;
+
+  function updateStrokeAnimation(char) {
+    const container = document.getElementById('stroke-anim-target');
+    if (!container) return;
+    container.innerHTML = '';
+
+    if (typeof HanziWriter !== 'undefined') {
+      try {
+        hanziWriterInstance = HanziWriter.create('stroke-anim-target', char, {
+          width: 110,
+          height: 110,
+          padding: 8,
+          showOutline: true,
+          strokeAnimationSpeed: 1,
+          delayBetweenStrokes: 220,
+          strokeColor: '#FF6B6B',
+          radicalColor: '#6C5CE7',
+          strokeHighlightSpeed: 2
+        });
+        hanziWriterInstance.animateCharacter();
+      } catch(e) {
+        console.warn('HanziWriter init:', e);
+      }
+    }
+
+    // Render stroke list
+    const stepsListEl = document.getElementById('stroke-steps-list');
+    const strokeCountTag = document.getElementById('stroke-count-tag');
+    if (stepsListEl) {
+      const strokes = STROKE_DATA[char];
+      if (strokes && strokes.length > 0) {
+        if (strokeCountTag) strokeCountTag.textContent = `✏️ “${char}” 笔画顺序 (${strokes.length} 画 / ${strokes.length} Strokes)`;
+        stepsListEl.innerHTML = strokes.map((s, idx) => `<span class="stroke-step-pill">${idx + 1}. ${s}</span>`).join('');
+      } else {
+        if (strokeCountTag) strokeCountTag.textContent = `✏️ “${char}” 笔画顺序 (Stroke Order)`;
+        stepsListEl.innerHTML = `<span class="stroke-step-pill">▶ 点击播放动画 (Click Play Strokes)</span>`;
+      }
+    }
+  }
+
+  function switchPracticeBox(boxNum) {
+    SoundEffects.playBubble();
+    state.currentBoxIndex = boxNum;
+
+    // Update tabs UI
+    for (let i = 1; i <= 3; i++) {
+      const tab = document.getElementById(`write-box-tab-${i}`);
+      if (tab) {
+        if (i === boxNum) tab.classList.add('active');
+        else tab.classList.remove('active');
+      }
+    }
+
+    // Update watermark opacity based on box
+    const watermark = document.getElementById('write-watermark');
+    if (watermark) {
+      if (boxNum === 1) {
+        watermark.style.opacity = '0.35'; // Box 1: Trace
+      } else if (boxNum === 2) {
+        watermark.style.opacity = '0.12'; // Box 2: Faint outline
+      } else {
+        watermark.style.opacity = '0'; // Box 3: Free hand
+      }
+    }
+
+    clearCanvas();
+  }
+
   // ---- View 7: Write & Trace Mode ----
   function startWriteMode() {
     state.lastMode = 'write';
     state.currentWriteIndex = 0;
+    state.currentCharIndex = 0;
     showView('write');
     setTimeout(() => {
       initWritingCanvas();
@@ -832,22 +940,6 @@ const App = (() => {
     }
   }
 
-  function finishWriting() {
-    SoundEffects.playCorrect();
-    const word = state.currentLevel.vocabulary[state.currentWriteIndex];
-    speakBilingual(
-      `太棒了！${state.userName ? state.userName : '小朋友'}，你写得真好看！`,
-      `Great job ${state.userName ? state.userName : ''}! You wrote ${word.english} so nicely!`
-    );
-    
-    // Auto advance
-    setTimeout(() => {
-      if (state.currentWriteIndex < state.currentLevel.vocabulary.length - 1) {
-        writeNext();
-      }
-    }, 2800);
-  }
-
   function renderWriteCard() {
     const level = state.currentLevel;
     const word = level.vocabulary[state.currentWriteIndex];
@@ -859,15 +951,52 @@ const App = (() => {
     document.getElementById('write-pinyin').textContent = word.pinyin;
     document.getElementById('write-english').textContent = word.english;
 
-    const watermark = document.getElementById('write-watermark');
-    watermark.textContent = word.hanzi;
-    if (word.hanzi.length >= 4) {
-      watermark.style.fontSize = '4.5rem';
-    } else if (word.hanzi.length >= 2) {
-      watermark.style.fontSize = '7.5rem';
+    // Multi-char tabs
+    const chars = Array.from(word.hanzi);
+    const charTabsRow = document.getElementById('write-char-tabs');
+    if (chars.length > 1) {
+      charTabsRow.classList.remove('hidden');
+      charTabsRow.innerHTML = chars.map((c, i) => `
+        <button type="button" class="char-tab-btn ${i === state.currentCharIndex ? 'active' : ''}" data-char-idx="${i}">
+          ${c}
+        </button>
+      `).join('');
+      charTabsRow.querySelectorAll('.char-tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          SoundEffects.playBubble();
+          state.currentCharIndex = parseInt(btn.getAttribute('data-char-idx'), 10);
+          renderWriteCard();
+        });
+      });
     } else {
-      watermark.style.fontSize = '13rem';
+      charTabsRow.classList.add('hidden');
+      state.currentCharIndex = 0;
     }
+
+    const currentChar = chars[state.currentCharIndex] || word.hanzi;
+
+    // Reset 3 boxes
+    state.currentBoxIndex = 1;
+    state.boxCompleted = { 1: false, 2: false, 3: false };
+    for (let i = 1; i <= 3; i++) {
+      const tab = document.getElementById(`write-box-tab-${i}`);
+      const star = document.getElementById(`box-star-${i}`);
+      if (tab) {
+        tab.classList.remove('completed');
+        if (i === 1) tab.classList.add('active');
+        else tab.classList.remove('active');
+      }
+      if (star) star.textContent = '☆';
+    }
+
+    // Update stroke demo
+    updateStrokeAnimation(currentChar);
+
+    // Update watermark text & style
+    const watermark = document.getElementById('write-watermark');
+    watermark.textContent = currentChar;
+    watermark.style.fontSize = '13rem';
+    watermark.style.opacity = '0.35';
 
     clearCanvas();
 
@@ -882,6 +1011,7 @@ const App = (() => {
       dot.className = `dot ${i === idx ? 'active' : ''}`;
       dot.addEventListener('click', () => {
         state.currentWriteIndex = i;
+        state.currentCharIndex = 0;
         renderWriteCard();
       });
       dotsContainer.appendChild(dot);
@@ -895,10 +1025,54 @@ const App = (() => {
     }, 200);
   }
 
+  function finishWriting() {
+    const boxNum = state.currentBoxIndex;
+    state.boxCompleted[boxNum] = true;
+
+    // Update star on this box tab
+    const starEl = document.getElementById(`box-star-${boxNum}`);
+    if (starEl) starEl.textContent = '⭐';
+    const tabEl = document.getElementById(`write-box-tab-${boxNum}`);
+    if (tabEl) tabEl.classList.add('completed');
+
+    if (boxNum < 3) {
+      SoundEffects.playPop();
+      // Snappy short notification & switch to next box
+      setTimeout(() => {
+        switchPracticeBox(boxNum + 1);
+      }, 350);
+    } else {
+      // Completed all 3 boxes!
+      SoundEffects.playVictory();
+      speakDynamic('太棒了！');
+
+      const word = state.currentLevel.vocabulary[state.currentWriteIndex];
+      const chars = Array.from(word.hanzi);
+
+      // If multi-character word and has remaining character
+      if (state.currentCharIndex < chars.length - 1) {
+        setTimeout(() => {
+          state.currentCharIndex++;
+          renderWriteCard();
+        }, 1100);
+      } else {
+        // Move to next word
+        setTimeout(() => {
+          if (state.currentWriteIndex < state.currentLevel.vocabulary.length - 1) {
+            writeNext();
+          } else {
+            showQuizResults('write');
+          }
+        }, 1100);
+      }
+    }
+  }
+
   function writeNext() {
     if (state.currentWriteIndex < state.currentLevel.vocabulary.length - 1) {
       SoundEffects.playBubble();
       state.currentWriteIndex++;
+      state.currentCharIndex = 0;
       renderWriteCard();
     }
   }
@@ -907,6 +1081,7 @@ const App = (() => {
     if (state.currentWriteIndex > 0) {
       SoundEffects.playBubble();
       state.currentWriteIndex--;
+      state.currentCharIndex = 0;
       renderWriteCard();
     }
   }
@@ -1032,6 +1207,9 @@ const App = (() => {
   }
 
   function renderSpeakQuestion() {
+    if (typeof speechSynthesis !== 'undefined') {
+      try { speechSynthesis.cancel(); } catch(e) {}
+    }
     const q = state.speakQuestions[state.currentSpeakIndex];
     const total = state.speakQuestions.length;
 
@@ -1082,11 +1260,9 @@ const App = (() => {
       if (isMatch) {
         SoundEffects.playCorrect();
         state.speakScore++;
-        const randomPraise = PANDA_PRAISES[Math.floor(Math.random() * PANDA_PRAISES.length)];
         feedbackEl.innerHTML = `
           <div class="feedback-success">
-            🎉 <strong>太棒啦！读得很准确！(Accurate pronunciation!)</strong>
-            <p>${randomPraise}</p>
+            🎉 <strong>太棒啦！(Well done!)</strong>
             <small>你说的是 (You said): "${heard}"</small>
           </div>
         `;
@@ -1099,6 +1275,10 @@ const App = (() => {
 
         document.getElementById('mic-btn').disabled = true;
 
+        if (typeof speechSynthesis !== 'undefined') {
+          try { speechSynthesis.cancel(); } catch(e) {}
+        }
+
         setTimeout(() => {
           state.currentSpeakIndex++;
           if (state.currentSpeakIndex < state.speakQuestions.length) {
@@ -1106,7 +1286,7 @@ const App = (() => {
           } else {
             showQuizResults('speak');
           }
-        }, 1500);
+        }, 1000);
 
       } else {
         SoundEffects.playTryAgain();
@@ -1320,6 +1500,24 @@ const App = (() => {
     document.getElementById('write-clear-btn').addEventListener('click', clearCanvas);
     document.getElementById('write-guide-toggle').addEventListener('click', toggleGuide);
     document.getElementById('write-finish-btn').addEventListener('click', finishWriting);
+
+    const strokePlayBtn = document.getElementById('stroke-play-btn');
+    if (strokePlayBtn) {
+      strokePlayBtn.addEventListener('click', () => {
+        SoundEffects.playBubble();
+        if (hanziWriterInstance) {
+          hanziWriterInstance.animateCharacter();
+        }
+      });
+    }
+
+    // 3 Writing box practice tabs
+    document.querySelectorAll('.write-box-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        const boxNum = parseInt(tab.getAttribute('data-box'), 10);
+        if (boxNum) switchPracticeBox(boxNum);
+      });
+    });
 
     // Color palette
     document.querySelectorAll('.color-btn').forEach(btn => {
