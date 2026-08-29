@@ -113,6 +113,63 @@ const App = (() => {
     }
   }
 
+  // Voice Selectors (Ensures pleasant, friendly female/girl voice)
+  function getFemaleEnglishVoice(voices) {
+    if (!voices || voices.length === 0) return null;
+
+    // 1. Preferred Female Voice Names (Edge / Chrome / Windows / Mac / iOS)
+    const preferredFemaleNames = [
+      'jenny', 'aria', 'zira', 'samantha', 'victoria', 'karen',
+      'google us english', 'female', 'natural (female)', 'eva', 'ana', 'sonia', 'libby'
+    ];
+
+    for (const name of preferredFemaleNames) {
+      const match = voices.find(v => {
+        const vName = (v.name || '').toLowerCase();
+        const vLang = (v.lang || '').toLowerCase();
+        return vLang.startsWith('en') && vName.includes(name);
+      });
+      if (match) return match;
+    }
+
+    // 2. Filter out male voices ('david', 'george', 'mark', 'guy', 'male', 'richard')
+    const maleNames = ['david', 'george', 'mark', 'guy', 'male', 'richard', 'james', 'alex'];
+    const nonMaleEn = voices.find(v => {
+      const vName = (v.name || '').toLowerCase();
+      const vLang = (v.lang || '').toLowerCase();
+      const isMale = maleNames.some(m => vName.includes(m));
+      return vLang.startsWith('en') && !isMale;
+    });
+
+    if (nonMaleEn) return nonMaleEn;
+
+    // 3. Fallback to any English voice
+    return voices.find(v => (v.lang || '').toLowerCase().startsWith('en')) || null;
+  }
+
+  function getFemaleChineseVoice(voices) {
+    if (!voices || voices.length === 0) return null;
+    const preferredFemaleNames = ['xiaoxiao', 'huihui', 'yaoyao', 'google 普通话', 'tingting', 'meijia', 'female'];
+    for (const name of preferredFemaleNames) {
+      const match = voices.find(v => {
+        const vName = (v.name || '').toLowerCase();
+        const vLang = (v.lang || '').toLowerCase();
+        return (vLang.startsWith('zh') || vLang.includes('cn')) && vName.includes(name);
+      });
+      if (match) return match;
+    }
+
+    const maleNames = ['kangkang', 'yunxi', 'yunyang', 'male'];
+    const nonMaleZh = voices.find(v => {
+      const vName = (v.name || '').toLowerCase();
+      const vLang = (v.lang || '').toLowerCase();
+      const isMale = maleNames.some(m => vName.includes(m));
+      return (vLang.startsWith('zh') || vLang.includes('cn')) && !isMale;
+    });
+
+    return nonMaleZh || voices.find(v => (v.lang || '').toLowerCase().startsWith('zh')) || null;
+  }
+
   // ---- Dynamic Bilingual Speech Synthesis (reads Chinese + English translation) ----
   function speakBilingual(chineseText, englishText) {
     if (typeof speechSynthesis === 'undefined') return;
@@ -121,13 +178,13 @@ const App = (() => {
     setTimeout(() => {
       const voices = speechSynthesis.getVoices();
 
-      // 1. Chinese Speech
+      // 1. Chinese Speech (Female / Teacher voice)
       if (chineseText) {
         const utterZh = new SpeechSynthesisUtterance(chineseText);
         utterZh.lang = 'zh-CN';
-        utterZh.rate = 0.9;
-        utterZh.pitch = 1.05;
-        const zhVoice = voices.find(v => v.lang && (v.lang.startsWith('zh') || v.lang.includes('CN') || v.lang.includes('Mandarin')));
+        utterZh.rate = 0.88;
+        utterZh.pitch = 1.1;
+        const zhVoice = getFemaleChineseVoice(voices);
         if (zhVoice) utterZh.voice = zhVoice;
 
         if (englishText) {
@@ -135,9 +192,9 @@ const App = (() => {
             setTimeout(() => {
               const utterEn = new SpeechSynthesisUtterance(englishText);
               utterEn.lang = 'en-US';
-              utterEn.rate = 0.92;
-              utterEn.pitch = 1.1;
-              const enVoice = voices.find(v => v.lang && (v.lang.startsWith('en') || v.lang.includes('US') || v.lang.includes('GB')));
+              utterEn.rate = 0.9;
+              utterEn.pitch = 1.2; // Cheerful girl pitch
+              const enVoice = getFemaleEnglishVoice(voices);
               if (enVoice) utterEn.voice = enVoice;
               speechSynthesis.speak(utterEn);
             }, 250);
@@ -148,7 +205,10 @@ const App = (() => {
       } else if (englishText) {
         const utterEn = new SpeechSynthesisUtterance(englishText);
         utterEn.lang = 'en-US';
-        utterEn.rate = 0.92;
+        utterEn.rate = 0.9;
+        utterEn.pitch = 1.2; // Cheerful girl pitch
+        const enVoice = getFemaleEnglishVoice(voices);
+        if (enVoice) utterEn.voice = enVoice;
         speechSynthesis.speak(utterEn);
       }
     }, 120);
