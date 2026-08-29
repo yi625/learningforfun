@@ -112,20 +112,49 @@ const App = (() => {
     }
   }
 
-  // ---- Dynamic Speech Synthesis (reads custom sentences with child name) ----
-  function speakDynamic(text) {
-    if (!text || typeof speechSynthesis === 'undefined') return;
+  // ---- Dynamic Bilingual Speech Synthesis (reads Chinese + English translation) ----
+  function speakBilingual(chineseText, englishText) {
+    if (typeof speechSynthesis === 'undefined') return;
     try { speechSynthesis.cancel(); } catch(e) {}
+
     setTimeout(() => {
-      const utter = new SpeechSynthesisUtterance(text);
-      utter.lang = 'zh-CN';
-      utter.rate = 0.9;
-      utter.pitch = 1.1; // Gentle friendly pitch
       const voices = speechSynthesis.getVoices();
-      const zhVoice = voices.find(v => v.lang && (v.lang.startsWith('zh') || v.lang.includes('CN') || v.lang.includes('Mandarin')));
-      if (zhVoice) utter.voice = zhVoice;
-      speechSynthesis.speak(utter);
+
+      // 1. Chinese Speech
+      if (chineseText) {
+        const utterZh = new SpeechSynthesisUtterance(chineseText);
+        utterZh.lang = 'zh-CN';
+        utterZh.rate = 0.9;
+        utterZh.pitch = 1.05;
+        const zhVoice = voices.find(v => v.lang && (v.lang.startsWith('zh') || v.lang.includes('CN') || v.lang.includes('Mandarin')));
+        if (zhVoice) utterZh.voice = zhVoice;
+
+        if (englishText) {
+          utterZh.onend = () => {
+            setTimeout(() => {
+              const utterEn = new SpeechSynthesisUtterance(englishText);
+              utterEn.lang = 'en-US';
+              utterEn.rate = 0.92;
+              utterEn.pitch = 1.1;
+              const enVoice = voices.find(v => v.lang && (v.lang.startsWith('en') || v.lang.includes('US') || v.lang.includes('GB')));
+              if (enVoice) utterEn.voice = enVoice;
+              speechSynthesis.speak(utterEn);
+            }, 250);
+          };
+        }
+
+        speechSynthesis.speak(utterZh);
+      } else if (englishText) {
+        const utterEn = new SpeechSynthesisUtterance(englishText);
+        utterEn.lang = 'en-US';
+        utterEn.rate = 0.92;
+        speechSynthesis.speak(utterEn);
+      }
     }, 120);
+  }
+
+  function speakDynamic(text) {
+    speakBilingual(text, null);
   }
 
   // ---- User Profile ----
@@ -153,10 +182,13 @@ const App = (() => {
     updateUserGreeting();
     hideProfileModal();
 
-    // Friendly panda sound & read out child's name in Chinese!
+    // Friendly panda sound & read out bilingual welcome in Chinese + English!
     SoundEffects.playCorrect();
     setTimeout(() => {
-      speakDynamic(`你好，${cleanName}！欢迎来到华语乐园！`);
+      speakBilingual(
+        `你好，${cleanName}！欢迎来到华语乐园！`,
+        `Hello ${cleanName}! Welcome to Chinese for Kids!`
+      );
     }, 300);
   }
 
@@ -167,7 +199,7 @@ const App = (() => {
       if (state.userName) {
         el.innerHTML = `👋 你好 (Hello), <strong>${escapeHtml(state.userName)}</strong>!`;
         if (speechEl) {
-          speechEl.innerHTML = `<p><strong>${escapeHtml(state.userName)}</strong>，欢迎来到华语乐园！(Welcome to Chinese for Kids!) 🐼✨</p>`;
+          speechEl.innerHTML = `<p><strong>${escapeHtml(state.userName)}</strong>, 欢迎来到华语乐园！(Welcome to Chinese for Kids!) 🐼✨</p>`;
         }
       } else {
         el.innerHTML = `👋 你好 (Hello), 小朋友 (Student)!`;
@@ -728,14 +760,17 @@ const App = (() => {
   function finishWriting() {
     SoundEffects.playCorrect();
     const word = state.currentLevel.vocabulary[state.currentWriteIndex];
-    speakDynamic(`太棒了！${state.userName ? state.userName : '小朋友'}，你写的“${word.hanzi}”真好看！`);
+    speakBilingual(
+      `太棒了！${state.userName ? state.userName : '小朋友'}，你写得真好看！`,
+      `Great job ${state.userName ? state.userName : ''}! You wrote ${word.english} so nicely!`
+    );
     
     // Auto advance
     setTimeout(() => {
       if (state.currentWriteIndex < state.currentLevel.vocabulary.length - 1) {
         writeNext();
       }
-    }, 1800);
+    }, 2800);
   }
 
   function renderWriteCard() {
@@ -1257,12 +1292,22 @@ const App = (() => {
     const profileBadge = document.getElementById('user-profile-badge');
     if (profileBadge) {
       profileBadge.addEventListener('click', () => {
-        if (state.userName) {
-          SoundEffects.playBubble();
-          speakDynamic(`你好，${state.userName}！欢迎来到华语乐园！`);
-        }
+        SoundEffects.playBubble();
+        const name = state.userName || '小朋友';
+        speakBilingual(`你好，${name}！欢迎来到华语乐园！`, `Hello ${name}! Welcome to Chinese for Kids!`);
       });
     }
+
+    const mascotAvatar = document.getElementById('mascot-avatar');
+    const mascotSpeech = document.getElementById('mascot-speech');
+    const triggerMascotVoice = () => {
+      SoundEffects.playBubble();
+      const name = state.userName || '小朋友';
+      speakBilingual(`你好，${name}！我是熊猫宝宝，一起来快乐学华语吧！`, `Hello ${name}! I am Panda Bao Bao, welcome to our Chinese learning playgroup!`);
+    };
+
+    if (mascotAvatar) mascotAvatar.addEventListener('click', triggerMascotVoice);
+    if (mascotSpeech) mascotSpeech.addEventListener('click', triggerMascotVoice);
 
     // Back buttons
     document.querySelectorAll('.back-to-levels').forEach(btn => btn.addEventListener('click', goToLevels));
