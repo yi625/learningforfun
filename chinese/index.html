@@ -18,7 +18,7 @@
         <a href="../" class="lang-switch-btn" style="text-decoration: none; font-size: 0.85rem; font-weight: 700; color: #E8833A; background: #FFF4E6; padding: 0.35rem 0.85rem; border-radius: 20px; border: 1px solid #FFE0B2;">🇹🇭 Learn Thai (泰语学习) ➔</a>
         <!-- Child Profile Badge -->
         <div class="user-profile-badge" id="user-profile-badge" style="margin-bottom: 0;">
-          <span class="user-avatar">🧒</span>
+          <span class="user-avatar" id="user-avatar-display">👧</span>
           <span class="user-greeting-text" id="user-greeting-text">👋 你好 (Hello), 小朋友 (Student)!</span>
           <button class="edit-profile-btn" id="edit-profile-btn" title="修改名字 (Edit Name)">✏️</button>
         </div>
@@ -328,15 +328,36 @@
 
   </main>
 
-  <!-- ============ MODAL: USER WELCOME (输入小朋友名字) ============ -->
+  <!-- ============ MODAL: USER WELCOME (输入小朋友名字与选择头像) ============ -->
   <div id="profile-modal" class="modal-overlay hidden">
     <div class="modal-card">
       <div class="modal-panda-head">🐼</div>
       <h2 class="modal-title">🎉 欢迎来到华语乐园！</h2>
       <p class="modal-subtitle">Welcome to Chinese for Kids Playgroup!</p>
-      <p style="font-size: 0.95rem; color: #636E72; margin: 0.35rem 0 1.25rem 0;">✨ 零基础趣味学中文 (Designed for beginners with 0 Chinese knowledge)</p>
+      <p style="font-size: 0.95rem; color: #636E72; margin: 0.35rem 0 1rem 0;">✨ 零基础趣味学中文 (Designed for beginners with 0 Chinese knowledge)</p>
       
       <form id="profile-form">
+        <!-- Choose Character Avatar (Girl / Boy / Kid / Panda) -->
+        <label class="modal-label">选择你的形象 (Choose Your Avatar):</label>
+        <div class="avatar-picker-grid" id="avatar-picker-grid">
+          <button type="button" class="avatar-choice-btn active" data-avatar="👧" title="女孩子 (Girl)">
+            <span class="avatar-emoji">👧</span>
+            <span class="avatar-title">女孩 (Girl)</span>
+          </button>
+          <button type="button" class="avatar-choice-btn" data-avatar="👦" title="男孩子 (Boy)">
+            <span class="avatar-emoji">👦</span>
+            <span class="avatar-title">男孩 (Boy)</span>
+          </button>
+          <button type="button" class="avatar-choice-btn" data-avatar="🧒" title="小朋友 (Kid)">
+            <span class="avatar-emoji">🧒</span>
+            <span class="avatar-title">宝贝 (Kid)</span>
+          </button>
+          <button type="button" class="avatar-choice-btn" data-avatar="🐼" title="熊猫 (Panda)">
+            <span class="avatar-emoji">🐼</span>
+            <span class="avatar-title">熊猫 (Panda)</span>
+          </button>
+        </div>
+
         <label for="user-name-input" class="modal-label">小朋友，你叫什么名字呀？<br><span class="label-sub">(What is your child's name?)</span></label>
         <input type="text" id="user-name-input" class="modal-input" placeholder="e.g. Hanna, Alex, Emma..." maxlength="20" required autofocus>
         <button type="submit" class="modal-start-btn">开始快乐学中文 (Start Learning) 🚀</button>

@@ -24,6 +24,7 @@ const App = (() => {
     progress: {},
     isRecording: false,
     userName: '',
+    userAvatar: '👧',
     lastMode: 'quiz',
   };
 
@@ -161,11 +162,13 @@ const App = (() => {
   function loadUserProfile() {
     try {
       const savedName = localStorage.getItem('chineseLearnerUserName');
+      const savedAvatar = localStorage.getItem('chineseLearnerUserAvatar');
+      if (savedAvatar) state.userAvatar = savedAvatar;
       if (savedName && savedName.trim()) {
         state.userName = savedName.trim();
         updateUserGreeting();
       } else {
-        showProfileModal(true);
+        showProfileModal();
       }
     } catch(e) {
       console.warn('Could not load user profile:', e);
@@ -178,6 +181,7 @@ const App = (() => {
     state.userName = cleanName;
     try {
       localStorage.setItem('chineseLearnerUserName', cleanName);
+      localStorage.setItem('chineseLearnerUserAvatar', state.userAvatar || '👧');
     } catch(e) {}
     updateUserGreeting();
     hideProfileModal();
@@ -194,7 +198,11 @@ const App = (() => {
 
   function updateUserGreeting() {
     const el = document.getElementById('user-greeting-text');
+    const avatarEl = document.getElementById('user-avatar-display');
     const speechEl = document.getElementById('mascot-speech');
+    if (avatarEl) {
+      avatarEl.textContent = state.userAvatar || '👧';
+    }
     if (el) {
       if (state.userName) {
         el.innerHTML = `👋 你好 (Hello), <strong>${escapeHtml(state.userName)}</strong>!`;
@@ -212,6 +220,13 @@ const App = (() => {
     const input = document.getElementById('user-name-input');
     if (modal && input) {
       input.value = state.userName || '';
+      document.querySelectorAll('.avatar-choice-btn').forEach(btn => {
+        if (btn.getAttribute('data-avatar') === (state.userAvatar || '👧')) {
+          btn.classList.add('active');
+        } else {
+          btn.classList.remove('active');
+        }
+      });
       modal.classList.remove('hidden');
       setTimeout(() => input.focus(), 150);
     }
@@ -1280,6 +1295,16 @@ const App = (() => {
         saveUserProfile(input.value);
       });
     }
+
+    // Avatar choice buttons
+    document.querySelectorAll('.avatar-choice-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        SoundEffects.playPop();
+        document.querySelectorAll('.avatar-choice-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        state.userAvatar = btn.getAttribute('data-avatar') || '👧';
+      });
+    });
 
     const editProfileBtn = document.getElementById('edit-profile-btn');
     if (editProfileBtn) {
