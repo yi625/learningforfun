@@ -53,7 +53,14 @@ EXTRA_PHRASES_ZH = {
     "me_m_desc": "这是我，华语小天才！",
     "tab_paternal": "爸爸这一边：认识爷爷、奶奶、大伯、叔叔、姑姑与堂兄弟姐妹！",
     "tab_maternal": "妈妈这一边：认识外公、外婆、舅舅、阿姨与表兄弟姐妹！",
-    "tab_guide": "亲戚称谓秘籍：认识大伯、叔叔、舅舅与堂表亲戚！"
+    "tab_guide": "亲戚称谓秘籍：认识大伯、叔叔、舅舅与堂表亲戚！",
+    "guide_dabo_zh": "大伯，爸爸的哥哥，英语叫 Uncle。",
+    "guide_shushu_zh": "叔叔，爸爸的弟弟，英语叫 Uncle。",
+    "guide_jiujiu_zh": "舅舅，妈妈的兄弟，英语叫 Uncle。",
+    "guide_guzhang_zh": "姑丈，姑姑的丈夫，英语叫 Uncle。",
+    "guide_yizhang_zh": "姨丈，阿姨的丈夫，英语叫 Uncle。",
+    "guide_tang_zh": "堂亲，同姓氏！爸爸兄弟的孩子，叫堂哥、堂姐、堂弟、堂妹。",
+    "guide_biao_zh": "表亲，不同姓氏！姑姑、舅舅和阿姨的孩子，叫表哥、表姐、表弟、表妹。"
 }
 
 # English Explanations (Natural, warm, cheerful JennyNeural teacher voice)
@@ -88,7 +95,14 @@ EXTRA_PHRASES_EN = {
     "me_m_en": "This is me, Chinese superstar!",
     "tab_paternal_en": "Father's side: grandparents, uncles, aunts and paternal cousins!",
     "tab_maternal_en": "Mother's side: grandparents, uncles, aunts and maternal cousins!",
-    "tab_guide_en": "Chinese relatives guide: why Chinese distinguishes different uncles and cousins!"
+    "tab_guide_en": "Chinese relatives guide: why Chinese distinguishes different uncles and cousins!",
+    "guide_dabo_en": "Dà bó: Uncle, your father's elder brother.",
+    "guide_shushu_en": "Shū shu: Uncle, your father's younger brother.",
+    "guide_jiujiu_en": "Jiù jiu: Uncle, your mother's brother.",
+    "guide_guzhang_en": "Gū zhàng: Uncle, your father's sister's husband.",
+    "guide_yizhang_en": "Yí zhàng: Uncle, your mother's sister's husband.",
+    "guide_tang_en": "Táng cousins: Paternal cousins who share your family surname! The children of your father's brothers are called Táng Gē, Táng Jiě, Táng Dì, and Táng Mèi.",
+    "guide_biao_en": "Biǎo cousins: Cousins with different family surnames! The children of your aunts and maternal uncles are called Biǎo Gē, Biǎo Jiě, Biǎo Dì, and Biǎo Mèi."
 }
 
 all_items = (

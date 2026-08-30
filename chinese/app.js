@@ -1501,6 +1501,56 @@ const App = (() => {
     `;
   }
 
+  function playGuideCard(pointId, specificLang) {
+    const now = Date.now();
+    const actionKey = pointId + '_' + (specificLang || 'auto');
+    if (now - lastAudioPlayTime < 250 && lastAudioPlayKey === actionKey) {
+      return;
+    }
+    lastAudioPlayTime = now;
+    lastAudioPlayKey = actionKey;
+
+    if (typeof SoundEffects !== 'undefined' && SoundEffects.playPop) {
+      try { SoundEffects.playPop(); } catch(e) {}
+    }
+
+    const card = document.querySelector(`.guide-point-card[data-point-id="${pointId}"]`);
+    if (card) {
+      card.classList.add('playing');
+      setTimeout(() => card.classList.remove('playing'), 3000);
+    }
+
+    const mode = specificLang || state.familyVoiceMode || 'bilingual';
+    const zhKey = pointId + '_zh';
+    const enKey = pointId + '_en';
+
+    const zhAudio = typeof AUDIO_MANIFEST !== 'undefined' ? AUDIO_MANIFEST[zhKey] : null;
+    const enAudio = typeof AUDIO_MANIFEST !== 'undefined' ? AUDIO_MANIFEST[enKey] : null;
+
+    if (mode === 'zh') {
+      if (zhAudio) playPreRecordedAudio(zhAudio);
+      return;
+    }
+
+    if (mode === 'en') {
+      if (enAudio) playPreRecordedAudio(enAudio);
+      return;
+    }
+
+    // Bilingual Mode: Play Chinese first, then English!
+    if (zhAudio) {
+      playPreRecordedAudio(zhAudio, () => {
+        if (enAudio) {
+          audioSequenceTimer = setTimeout(() => {
+            playPreRecordedAudio(enAudio);
+          }, 300);
+        }
+      });
+    } else if (enAudio) {
+      playPreRecordedAudio(enAudio);
+    }
+  }
+
   function renderFamilyTreeGuide(container) {
     const tips = FAMILY_TREE_DATA.comparisonTips;
     let html = `<div class="guide-comparison-wrap">`;
@@ -1514,8 +1564,14 @@ const App = (() => {
           </div>
           <div class="guide-points-grid">
             ${tip.points.map(pt => `
-              <div class="guide-point-card" data-label="${escapeHtml(pt.label)}" data-meaning="${escapeHtml(pt.meaning)}" onclick="App.speakBilingual('${escapeHtml(pt.label)}：${escapeHtml(pt.meaning)}', '${escapeHtml(pt.label)}: ${escapeHtml(pt.meaning)}')" title="点击听讲解 (Click to listen)">
-                <span class="guide-point-label">🔊 ${pt.label}</span>
+              <div class="guide-point-card" data-point-id="${pt.id}" onclick="App.playGuideCard('${pt.id}')" title="点击听讲解 (Click to listen)">
+                <div class="guide-point-header">
+                  <span class="guide-point-label">🔊 ${pt.label}</span>
+                  <div class="card-lang-btns mini">
+                    <button type="button" class="card-lang-btn zh" onclick="event.stopPropagation(); App.playGuideCard('${pt.id}', 'zh');" title="听中文讲解 (Chinese)">🇨🇳 中文</button>
+                    <button type="button" class="card-lang-btn en" onclick="event.stopPropagation(); App.playGuideCard('${pt.id}', 'en');" title="Listen English Explanation">🇬🇧 ENG</button>
+                  </div>
+                </div>
                 <span class="guide-point-meaning">${pt.meaning}</span>
               </div>
             `).join('')}
@@ -1526,16 +1582,6 @@ const App = (() => {
 
     html += `</div>`;
     container.innerHTML = html;
-
-    // Attach click listeners to guide cards
-    container.querySelectorAll('.guide-point-card').forEach(card => {
-      card.addEventListener('click', () => {
-        SoundEffects.playPop();
-        const label = card.getAttribute('data-label');
-        const meaning = card.getAttribute('data-meaning');
-        speakBilingual(`${label}：${meaning}`, `${label}: ${meaning}`);
-      });
-    });
   }
 
   function selectLevel(level) {
@@ -2942,6 +2988,7 @@ const App = (() => {
     selectAvatar,
     startFamilyTreeMode,
     playRelativeCard,
+    playGuideCard,
     setFamilyVoiceMode
   };
 })();

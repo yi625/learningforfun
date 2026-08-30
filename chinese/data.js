@@ -268,11 +268,11 @@ const FAMILY_TREE_DATA = {
       enTitle: "Why English has 1 'Uncle' but Chinese has many?",
       desc: "英文里的 Uncle 在华语里有精确的称呼：",
       points: [
-        { label: "大伯 (dà bó)", meaning: "爸爸的哥哥 (Dad's elder brother)" },
-        { label: "叔叔 (shū shu)", meaning: "爸爸的弟弟 (Dad's younger brother)" },
-        { label: "舅舅 (jiù jiu)", meaning: "妈妈的兄弟 (Mom's brother)" },
-        { label: "姑丈 (gū zhàng)", meaning: "姑姑的丈夫 (Dad's sister's husband)" },
-        { label: "姨丈 (yí zhàng)", meaning: "阿姨的丈夫 (Mom's sister's husband)" }
+        { id: "guide_dabo", label: "大伯 (dà bó)", meaning: "爸爸的哥哥 (Dad's elder brother)" },
+        { id: "guide_shushu", label: "叔叔 (shū shu)", meaning: "爸爸的弟弟 (Dad's younger brother)" },
+        { id: "guide_jiujiu", label: "舅舅 (jiù jiu)", meaning: "妈妈的兄弟 (Mom's brother)" },
+        { id: "guide_guzhang", label: "姑丈 (gū zhàng)", meaning: "姑姑的丈夫 (Dad's sister's husband)" },
+        { id: "guide_yizhang", label: "姨丈 (yí zhàng)", meaning: "阿姨的丈夫 (Mom's sister's husband)" }
       ]
     },
     {
@@ -280,8 +280,8 @@ const FAMILY_TREE_DATA = {
       enTitle: "Cousin Difference: Tang vs Biao",
       desc: "同样是 Cousin，华语分‘堂’和‘表’：",
       points: [
-        { label: "堂 (Táng)", meaning: "同姓氏！爸爸的兄弟（伯伯、叔叔）的孩子叫【堂哥、堂姐、堂弟、堂妹】" },
-        { label: "表 (Biǎo)", meaning: "不同姓氏！姑姑、舅舅、阿姨的孩子都叫【表哥、表姐、表弟、表妹】" }
+        { id: "guide_tang", label: "堂 (Táng)", meaning: "同姓氏！爸爸的兄弟（伯伯、叔叔）的孩子叫【堂哥、堂姐、堂弟、堂妹】" },
+        { id: "guide_biao", label: "表 (Biǎo)", meaning: "不同姓氏！姑姑、舅舅、阿姨的孩子都叫【表哥、表姐、表弟、表妹】" }
       ]
     }
   ]

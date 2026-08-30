@@ -150,6 +150,13 @@ const AUDIO_MANIFEST = {
   "tab_paternal": "audio/6806abd284f7.mp3",
   "tab_maternal": "audio/285381b5540f.mp3",
   "tab_guide": "audio/538107e2341a.mp3",
+  "guide_dabo_zh": "audio/2ba1f1401afe.mp3",
+  "guide_shushu_zh": "audio/ccbc16ebf080.mp3",
+  "guide_jiujiu_zh": "audio/07c43014fd5a.mp3",
+  "guide_guzhang_zh": "audio/1f48230de949.mp3",
+  "guide_yizhang_zh": "audio/d1b7c073541c.mp3",
+  "guide_tang_zh": "audio/1c4eced940f7.mp3",
+  "guide_biao_zh": "audio/ff56becf9639.mp3",
   "yeye_en": "audio/dff710e7a787.mp3",
   "nainai_en": "audio/faa395b5d885.mp3",
   "waigong_en": "audio/55be43afc498.mp3",
@@ -180,5 +187,12 @@ const AUDIO_MANIFEST = {
   "me_m_en": "audio/8361e6ff9f21.mp3",
   "tab_paternal_en": "audio/7c59f85409fc.mp3",
   "tab_maternal_en": "audio/37ff234489be.mp3",
-  "tab_guide_en": "audio/e451df1cbf0b.mp3"
+  "tab_guide_en": "audio/e451df1cbf0b.mp3",
+  "guide_dabo_en": "audio/734ab88b7797.mp3",
+  "guide_shushu_en": "audio/739c3b1bf812.mp3",
+  "guide_jiujiu_en": "audio/10d7d0da85ee.mp3",
+  "guide_guzhang_en": "audio/93ffe83895a2.mp3",
+  "guide_yizhang_en": "audio/9bd62ef8a526.mp3",
+  "guide_tang_en": "audio/52c15032673c.mp3",
+  "guide_biao_en": "audio/9666e9a2802a.mp3"
 };
