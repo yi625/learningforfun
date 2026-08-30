@@ -1025,9 +1025,165 @@ const App = (() => {
     }, 200);
   }
 
+  // ---- AI Handwriting Verification Engine ----
+  function verifyWritingAccuracy(canvas, expectedChar) {
+    if (!canvas) return { pass: false, message: '请在田字格里写字哦！(Please write on canvas!)' };
+    const ctx = canvas.getContext('2d');
+    const w = canvas.width;
+    const h = canvas.height;
+
+    // Check if canvas has drawn strokes
+    const drawnData = ctx.getImageData(0, 0, w, h).data;
+    let drawnPoints = [];
+
+    for (let y = 0; y < h; y += 4) {
+      for (let x = 0; x < w; x += 4) {
+        const idx = (y * w + x) * 4 + 3; // alpha channel
+        if (drawnData[idx] > 40) {
+          drawnPoints.push({ x, y });
+        }
+      }
+    }
+
+    if (drawnPoints.length < 35) {
+      return {
+        pass: false,
+        reason: 'too_empty',
+        message: '✏️ 还没有写字哦，请先在田字格里书写汉字！(Please write the character first!)'
+      };
+    }
+
+    // Render reference character on offscreen canvas
+    const offCanvas = document.createElement('canvas');
+    offCanvas.width = w;
+    offCanvas.height = h;
+    const offCtx = offCanvas.getContext('2d');
+    offCtx.fillStyle = '#000000';
+
+    const fontSize = expectedChar.length >= 2 ? Math.round(w * 0.45) : Math.round(w * 0.68);
+    offCtx.font = `900 ${fontSize}px 'Noto Sans SC', 'Kaiti', 'STKaiti', sans-serif`;
+    offCtx.textAlign = 'center';
+    offCtx.textBaseline = 'middle';
+    offCtx.fillText(expectedChar, w / 2, h / 2);
+
+    const targetData = offCtx.getImageData(0, 0, w, h).data;
+    let targetPoints = [];
+    for (let y = 0; y < h; y += 4) {
+      for (let x = 0; x < w; x += 4) {
+        const idx = (y * w + x) * 4 + 3;
+        if (targetData[idx] > 40) {
+          targetPoints.push({ x, y });
+        }
+      }
+    }
+
+    if (targetPoints.length === 0) {
+      return { pass: true, message: '🎉 写好了！(Done!)' };
+    }
+
+    // Tolerance distance (in canvas pixels): 24px for natural kid handwriting stroke width
+    const TOLERANCE_SQ = 24 * 24;
+
+    let inBoundsCount = 0;
+    let outOfBoundsCount = 0;
+
+    for (const p of drawnPoints) {
+      let isNear = false;
+      for (const tp of targetPoints) {
+        const distSq = (p.x - tp.x) * (p.x - tp.x) + (p.y - tp.y) * (p.y - tp.y);
+        if (distSq <= TOLERANCE_SQ) {
+          isNear = true;
+          break;
+        }
+      }
+      if (isNear) inBoundsCount++;
+      else outOfBoundsCount++;
+    }
+
+    let coveredTargetCount = 0;
+    for (const tp of targetPoints) {
+      let isCovered = false;
+      for (const p of drawnPoints) {
+        const distSq = (p.x - tp.x) * (p.x - tp.x) + (p.y - tp.y) * (p.y - tp.y);
+        if (distSq <= TOLERANCE_SQ) {
+          isCovered = true;
+          break;
+        }
+      }
+      if (isCovered) coveredTargetCount++;
+    }
+
+    const accuracy = inBoundsCount / (inBoundsCount + outOfBoundsCount + 1e-5);
+    const coverage = coveredTargetCount / (targetPoints.length + 1e-5);
+
+    console.log(`[AI Writing Check "${expectedChar}"] In: ${inBoundsCount}, Out: ${outOfBoundsCount}, Acc: ${(accuracy*100).toFixed(1)}%, Cov: ${(coverage*100).toFixed(1)}%`);
+
+    // Wild scribbles (like in random drawings) have high out-of-bounds counts
+    if (accuracy < 0.50) {
+      return {
+        pass: false,
+        reason: 'inaccurate',
+        message: `🤔 “${expectedChar}” 笔画写偏啦！请沿着红线认真描红哦！(Strokes went outside, please trace along the guide lines!)`
+      };
+    }
+
+    if (coverage < 0.28) {
+      return {
+        pass: false,
+        reason: 'incomplete',
+        message: `✏️ “${expectedChar}” 笔画还没写完整哦，继续把字写完吧！(Character is incomplete, please finish all strokes!)`
+      };
+    }
+
+    return {
+      pass: true,
+      accuracy: Math.round(accuracy * 100),
+      message: accuracy >= 0.80
+        ? `🌟 太棒了！“${expectedChar}” 写得非常标准漂亮！(Excellent! Accurate handwriting!)`
+        : `👍 很好！“${expectedChar}” 写对了！(Good job! Writing is correct!)`
+    };
+  }
+
+  function showWriteFeedback(message, type) {
+    const el = document.getElementById('write-feedback');
+    const box = document.getElementById('tianzige-box');
+    if (!el) return;
+
+    el.textContent = message;
+    el.className = `write-feedback ${type}`;
+    el.classList.remove('hidden');
+
+    if (box) {
+      box.classList.remove('pass-glow', 'shake-error');
+      void box.offsetWidth; // trigger reflow
+      if (type === 'success') {
+        box.classList.add('pass-glow');
+      } else {
+        box.classList.add('shake-error');
+      }
+    }
+  }
+
   function finishWriting() {
+    const word = state.currentLevel.vocabulary[state.currentWriteIndex];
+    const chars = Array.from(word.hanzi);
+    const currentChar = chars[state.currentCharIndex] || word.hanzi;
+    const canvas = document.getElementById('write-canvas');
+
+    // Run writing accuracy check
+    const checkResult = verifyWritingAccuracy(canvas, currentChar);
+
+    if (!checkResult.pass) {
+      SoundEffects.playTryAgain();
+      showWriteFeedback(checkResult.message, 'retry');
+      return; // DO NOT PASS OR ADVANCE!
+    }
+
+    // PASS!
     const boxNum = state.currentBoxIndex;
     state.boxCompleted[boxNum] = true;
+
+    showWriteFeedback(checkResult.message, 'success');
 
     // Update star on this box tab
     const starEl = document.getElementById(`box-star-${boxNum}`);
@@ -1037,24 +1193,24 @@ const App = (() => {
 
     if (boxNum < 3) {
       SoundEffects.playPop();
-      // Snappy short notification & switch to next box
       setTimeout(() => {
         switchPracticeBox(boxNum + 1);
-      }, 350);
+        const fb = document.getElementById('write-feedback');
+        if (fb) fb.classList.add('hidden');
+      }, 700);
     } else {
       // Completed all 3 boxes!
       SoundEffects.playVictory();
       speakDynamic('太棒了！');
-
-      const word = state.currentLevel.vocabulary[state.currentWriteIndex];
-      const chars = Array.from(word.hanzi);
 
       // If multi-character word and has remaining character
       if (state.currentCharIndex < chars.length - 1) {
         setTimeout(() => {
           state.currentCharIndex++;
           renderWriteCard();
-        }, 1100);
+          const fb = document.getElementById('write-feedback');
+          if (fb) fb.classList.add('hidden');
+        }, 1200);
       } else {
         // Move to next word
         setTimeout(() => {
@@ -1063,9 +1219,23 @@ const App = (() => {
           } else {
             showQuizResults('write');
           }
-        }, 1100);
+          const fb = document.getElementById('write-feedback');
+          if (fb) fb.classList.add('hidden');
+        }, 1200);
       }
     }
+  }
+
+  function clearCanvas() {
+    SoundEffects.playBubble();
+    const canvas = document.getElementById('write-canvas');
+    if (canvas && canvasCtx) {
+      canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+    const fb = document.getElementById('write-feedback');
+    if (fb) fb.classList.add('hidden');
+    const box = document.getElementById('tianzige-box');
+    if (box) box.classList.remove('pass-glow', 'shake-error');
   }
 
   function writeNext() {

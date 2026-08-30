@@ -1679,6 +1679,50 @@ body {
   box-shadow: 0 6px 16px rgba(46, 204, 113, 0.45);
 }
 
+/* Writing Feedback Banner */
+.write-feedback {
+  width: 100%;
+  max-width: 480px;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-md);
+  margin-bottom: 0.85rem;
+  font-weight: 700;
+  font-size: 0.95rem;
+  text-align: center;
+  animation: popIn 0.3s ease;
+  transition: var(--transition);
+}
+
+.write-feedback.success {
+  background: #E8F8F5;
+  border: 2px solid #2ECC71;
+  color: #16A085;
+}
+
+.write-feedback.retry {
+  background: #FDF2E9;
+  border: 2px solid #E67E22;
+  color: #D35400;
+}
+
+.write-feedback.error {
+  background: #FDEDEC;
+  border: 2px solid #E74C3C;
+  color: #C0392B;
+}
+
+.tianzige-box.pass-glow {
+  border-color: #2ECC71 !important;
+  box-shadow: 0 0 20px rgba(46, 204, 113, 0.45) !important;
+  animation: pop 0.4s ease;
+}
+
+.tianzige-box.shake-error {
+  border-color: #E74C3C !important;
+  box-shadow: 0 0 15px rgba(231, 76, 60, 0.35) !important;
+  animation: shake 0.45s ease;
+}
+
 /* Responsive */
 @media (max-width: 480px) {
   .app-title { font-size: 1.8rem; }
