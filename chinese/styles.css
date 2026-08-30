@@ -1124,111 +1124,220 @@ body {
   color: var(--secondary);
   font-weight: 700;
   font-size: 0.95rem;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.25rem;
 }
 
 .modal-label {
   display: block;
   font-weight: 800;
   color: var(--text-dark);
-  margin-bottom: 0.5rem;
-  font-size: 1.05rem;
+  margin-bottom: 0.45rem;
+  font-size: 0.95rem;
 }
 
-.label-sub {
-  font-size: 0.85rem;
-/* Multi-Child Profiles Quick Switcher in Modal */
-.existing-profiles-container {
-  margin-bottom: 1.1rem;
-  width: 100%;
-}
-
-.profiles-list-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  justify-content: center;
-  margin-bottom: 0.75rem;
-}
-
-.profile-pill-btn {
-  background: #FFF;
+/* Close Button in Modal */
+.modal-close-btn {
+  position: absolute;
+  top: 0.85rem;
+  right: 0.85rem;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
   border: 2px solid #E2E8F0;
-  border-radius: var(--radius-full);
-  padding: 0.45rem 1rem;
+  background: #FFF;
+  color: #636E72;
+  font-size: 1.1rem;
+  font-weight: 800;
   display: flex;
   align-items: center;
-  gap: 0.4rem;
+  justify-content: center;
   cursor: pointer;
   transition: var(--transition);
-  font-size: 0.95rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  z-index: 10;
+}
+
+.modal-close-btn:hover {
+  background: #FF7675;
+  color: white;
+  border-color: #FF7675;
+  transform: rotate(90deg) scale(1.1);
+}
+
+/* Profile Cards Grid (View A) */
+.profiles-list-section {
+  margin-bottom: 0.5rem;
+  text-align: left;
+}
+
+.profiles-cards-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin-bottom: 1rem;
+  max-height: 240px;
+  overflow-y: auto;
+  padding: 0.2rem;
+}
+
+.profile-kid-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #F8FAFC;
+  border: 2px solid #E2E8F0;
+  border-radius: var(--radius-md);
+  padding: 0.65rem 0.85rem;
+  transition: var(--transition);
+  cursor: pointer;
+}
+
+.profile-kid-card:hover {
+  border-color: var(--primary);
+  background: #FFF8F8;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+}
+
+.profile-kid-card.active {
+  border-color: var(--primary);
+  background: #FFF0F0;
+  box-shadow: 0 4px 14px rgba(255, 107, 107, 0.22);
+}
+
+.profile-kid-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.profile-kid-avatar {
+  font-size: 2.2rem;
+  line-height: 1;
+}
+
+.profile-kid-name {
+  font-size: 1.1rem;
   font-weight: 800;
   color: var(--text-dark);
 }
 
-.profile-pill-btn:hover {
-  transform: translateY(-2px);
-  border-color: var(--primary);
-  box-shadow: 0 4px 10px rgba(0,0,0,0.06);
+.profile-kid-stars {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #FFA502;
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
 }
 
-.profile-pill-btn.active {
+.profile-kid-badge {
+  font-size: 0.72rem;
+  font-weight: 800;
+  background: #2ECC71;
+  color: white;
+  padding: 0.15rem 0.5rem;
+  border-radius: 20px;
+  margin-left: 0.4rem;
+}
+
+.profile-kid-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.btn-card-edit, .btn-card-delete {
+  background: #FFF;
+  border: 1px solid #DFE4EA;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.btn-card-edit:hover {
+  background: #E8F4FD;
+  border-color: var(--secondary);
+}
+
+.btn-card-delete:hover {
+  background: #FFEDED;
+  border-color: var(--primary);
+}
+
+.btn-add-profile {
+  width: 100%;
+  background: #F1F5F9;
+  border: 2px dashed #CBD5E1;
+  border-radius: var(--radius-md);
+  padding: 0.75rem;
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--secondary);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.btn-add-profile:hover {
   background: #FFF5F5;
   border-color: var(--primary);
   color: var(--primary);
-  box-shadow: 0 3px 10px rgba(255, 107, 107, 0.25);
 }
 
-.or-divider {
-  display: flex;
-  align-items: center;
+/* Edit / Create Form Section (View B) */
+.profile-form-section {
+  display: none;
+  text-align: left;
+}
+
+.profile-form-section.active {
+  display: block;
+}
+
+.form-section-title {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--text-dark);
+  margin-bottom: 0.85rem;
   text-align: center;
-  margin: 0.85rem 0;
-  color: #A0AEC0;
-  font-size: 0.8rem;
-  font-weight: 700;
 }
 
-.or-divider::before, .or-divider::after {
-  content: '';
-  flex: 1;
-  border-bottom: 2px dashed #E2E8F0;
-}
-
-.or-divider span {
-  padding: 0 0.6rem;
-}
-
-/* Avatar Picker in Modal */
+/* Avatar Picker in Modal (8 Avatars, 4 columns) */
 .avatar-picker-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 0.6rem;
-  margin-bottom: 1.25rem;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
 }
 
 .avatar-choice-btn {
   background: #F8FAFC;
-  border: 3px solid #E2E8F0;
+  border: 2.5px solid #E2E8F0;
   border-radius: var(--radius-md);
-  padding: 0.6rem 0.25rem;
+  padding: 0.5rem 0.2rem;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.25rem;
+  gap: 0.2rem;
   cursor: pointer;
   transition: var(--transition);
   outline: none;
 }
 
 .avatar-choice-btn .avatar-emoji {
-  font-size: 2.2rem;
+  font-size: 1.9rem;
   line-height: 1;
   transition: transform 0.2s ease;
 }
 
 .avatar-choice-btn .avatar-title {
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   font-weight: 800;
   color: var(--text-dark);
   white-space: nowrap;
@@ -1257,14 +1366,14 @@ body {
 
 .modal-input {
   width: 100%;
-  padding: 0.9rem 1.25rem;
-  font-size: 1.2rem;
+  padding: 0.75rem 1rem;
+  font-size: 1.1rem;
   font-weight: 700;
   text-align: center;
-  border: 3px solid #DFE4EA;
+  border: 2.5px solid #DFE4EA;
   border-radius: var(--radius-full);
   outline: none;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.25rem;
   transition: var(--transition);
 }
 
@@ -1273,13 +1382,38 @@ body {
   box-shadow: 0 0 0 4px rgba(255, 107, 107, 0.2);
 }
 
+/* Form Action Row */
+.form-action-row {
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+}
+
+.btn-cancel-edit {
+  flex: 1;
+  background: #F1F2F6;
+  color: var(--text-muted);
+  border: 2px solid #DFE4EA;
+  border-radius: var(--radius-full);
+  padding: 0.85rem;
+  font-size: 1rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.btn-cancel-edit:hover {
+  background: #E2E8F0;
+  color: var(--text-dark);
+}
+
 .modal-start-btn {
-  width: 100%;
+  flex: 2;
   background: linear-gradient(135deg, var(--primary), var(--primary-dark));
   color: white;
   border: none;
-  padding: 0.95rem;
-  font-size: 1.2rem;
+  padding: 0.85rem;
+  font-size: 1.05rem;
   font-weight: 800;
   border-radius: var(--radius-full);
   cursor: pointer;

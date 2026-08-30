@@ -27,6 +27,7 @@ const App = (() => {
     speakAnswers: [],
     progress: {},
     isRecording: false,
+    profileId: '',
     userName: '',
     userAvatar: '👧',
     lastMode: 'quiz',
@@ -54,11 +55,32 @@ const App = (() => {
     "哇！写得好棒，熊猫宝宝给你点赞！(Panda Bao Bao gives you thumbs up!) 🐼✨"
   ];
 
-  // ---- Multi-Child Profiles & Progress (多学生独立档案系统) ----
+  // ---- Multi-Child Profiles & Progress (基于唯一ID的多学生独立档案系统) ----
   function getProfilesDirectory() {
     try {
       const raw = localStorage.getItem('chineseLearnerProfiles');
-      return raw ? JSON.parse(raw) : {};
+      let profiles = raw ? JSON.parse(raw) : {};
+
+      // Migrate legacy string-keyed profiles if any
+      let needsMigration = false;
+      const migrated = {};
+      Object.keys(profiles).forEach((key, idx) => {
+        const p = profiles[key];
+        if (p && typeof p === 'object') {
+          const id = p.id || ('kid_' + (idx + 1) + '_' + Date.now());
+          if (!p.id) {
+            p.id = id;
+            needsMigration = true;
+          }
+          migrated[id] = p;
+        }
+      });
+
+      if (needsMigration) {
+        saveProfilesDirectory(migrated);
+        return migrated;
+      }
+      return profiles;
     } catch(e) {
       return {};
     }
@@ -71,11 +93,10 @@ const App = (() => {
   }
 
   function loadProgress() {
-    const cleanName = (state.userName || '').trim();
-    if (cleanName) {
+    if (state.profileId) {
       const profiles = getProfilesDirectory();
-      if (profiles[cleanName] && profiles[cleanName].progress) {
-        state.progress = profiles[cleanName].progress;
+      if (profiles[state.profileId] && profiles[state.profileId].progress) {
+        state.progress = profiles[state.profileId].progress;
       } else {
         state.progress = {};
       }
@@ -100,16 +121,13 @@ const App = (() => {
   }
 
   function saveProgress() {
-    const cleanName = (state.userName || '').trim();
-    if (cleanName) {
+    if (state.profileId) {
       const profiles = getProfilesDirectory();
-      profiles[cleanName] = {
-        name: cleanName,
-        avatar: state.userAvatar || '👧',
-        progress: state.progress,
-        lastActive: Date.now()
-      };
-      saveProfilesDirectory(profiles);
+      if (profiles[state.profileId]) {
+        profiles[state.profileId].progress = state.progress;
+        profiles[state.profileId].lastActive = Date.now();
+        saveProfilesDirectory(profiles);
+      }
     }
     try {
       localStorage.setItem('chineseLearnerProgress', JSON.stringify(state.progress));
@@ -255,23 +273,45 @@ const App = (() => {
     speakBilingual(text, null);
   }
 
-  // ---- User Profile (多学生独立档案系统) ----
+  // ---- User Profile (基于唯一ID的多学生独立档案系统) ----
   function loadUserProfile() {
     try {
-      const activeName = localStorage.getItem('chineseLearnerActiveUser') || localStorage.getItem('chineseLearnerUserName');
       const profiles = getProfilesDirectory();
+      let activeId = localStorage.getItem('chineseLearnerActiveProfileId');
 
-      if (activeName && activeName.trim()) {
-        const cleanName = activeName.trim();
-        const profile = profiles[cleanName] || {
-          name: cleanName,
-          avatar: localStorage.getItem('chineseLearnerUserAvatar') || '👧',
-          progress: {}
-        };
+      // Fallback: Check legacy username
+      if (!activeId || !profiles[activeId]) {
+        const legacyName = localStorage.getItem('chineseLearnerUserName');
+        if (legacyName) {
+          const matchId = Object.keys(profiles).find(k => profiles[k].name === legacyName);
+          if (matchId) {
+            activeId = matchId;
+          } else if (legacyName.trim()) {
+            activeId = 'kid_' + Date.now();
+            let legacyProg = {};
+            try {
+              const savedProg = localStorage.getItem('chineseLearnerProgress');
+              if (savedProg) legacyProg = JSON.parse(savedProg);
+            } catch(e) {}
+            profiles[activeId] = {
+              id: activeId,
+              name: legacyName.trim(),
+              avatar: localStorage.getItem('chineseLearnerUserAvatar') || '👧',
+              progress: legacyProg,
+              createdAt: Date.now(),
+              lastActive: Date.now()
+            };
+            saveProfilesDirectory(profiles);
+          }
+        }
+      }
 
-        state.userName = profile.name;
-        state.userAvatar = profile.avatar || '👧';
-        state.progress = profile.progress || {};
+      if (activeId && profiles[activeId]) {
+        const p = profiles[activeId];
+        state.profileId = p.id;
+        state.userName = p.name || '小朋友';
+        state.userAvatar = p.avatar || '👧';
+        state.progress = p.progress || {};
 
         LEVELS.forEach(level => {
           if (!state.progress[level.id]) {
@@ -283,36 +323,41 @@ const App = (() => {
           }
         });
 
-        profiles[cleanName] = {
-          name: state.userName,
-          avatar: state.userAvatar,
-          progress: state.progress,
-          lastActive: Date.now()
-        };
+        p.lastActive = Date.now();
         saveProfilesDirectory(profiles);
-        localStorage.setItem('chineseLearnerActiveUser', cleanName);
+        localStorage.setItem('chineseLearnerActiveProfileId', activeId);
+        localStorage.setItem('chineseLearnerUserName', state.userName);
+        localStorage.setItem('chineseLearnerUserAvatar', state.userAvatar);
 
         updateUserGreeting();
         updateOverallProgress();
         renderLevelSelect();
       } else {
-        showProfileModal();
+        const pKeys = Object.keys(profiles);
+        if (pKeys.length > 0) {
+          switchProfile(pKeys[0]);
+        } else {
+          showProfileModal('edit');
+        }
       }
     } catch(e) {
       console.warn('Could not load user profile:', e);
     }
   }
 
-  function saveUserProfile(name, avatar) {
+  function saveUserProfile(profileId, name, avatar) {
     const cleanName = (name || '').trim();
     if (!cleanName) return;
 
     const chosenAvatar = avatar || state.userAvatar || '👧';
     const profiles = getProfilesDirectory();
+    const isNew = !profileId || !profiles[profileId];
+    const targetId = isNew ? ('kid_' + Date.now()) : profileId;
 
     let targetProgress = {};
-    if (profiles[cleanName] && profiles[cleanName].progress) {
-      targetProgress = profiles[cleanName].progress;
+    if (!isNew && profiles[targetId] && profiles[targetId].progress) {
+      // PRESERVE ALL PROGRESS & STARS WHEN CHANGING AVATAR OR NAME!
+      targetProgress = profiles[targetId].progress;
     } else {
       LEVELS.forEach(level => {
         targetProgress[level.id] = {
@@ -323,21 +368,25 @@ const App = (() => {
       });
     }
 
+    state.profileId = targetId;
     state.userName = cleanName;
     state.userAvatar = chosenAvatar;
     state.progress = targetProgress;
 
-    profiles[cleanName] = {
+    profiles[targetId] = {
+      id: targetId,
       name: cleanName,
       avatar: chosenAvatar,
       progress: targetProgress,
+      createdAt: (!isNew && profiles[targetId].createdAt) ? profiles[targetId].createdAt : Date.now(),
       lastActive: Date.now()
     };
 
     saveProfilesDirectory(profiles);
-    localStorage.setItem('chineseLearnerActiveUser', cleanName);
+    localStorage.setItem('chineseLearnerActiveProfileId', targetId);
     localStorage.setItem('chineseLearnerUserName', cleanName);
     localStorage.setItem('chineseLearnerUserAvatar', chosenAvatar);
+    localStorage.setItem('chineseLearnerProgress', JSON.stringify(targetProgress));
 
     updateUserGreeting();
     updateOverallProgress();
@@ -354,11 +403,68 @@ const App = (() => {
     }, 300);
   }
 
-  function switchProfile(name) {
+  function switchProfile(profileId) {
     SoundEffects.playBubble();
     const profiles = getProfilesDirectory();
-    if (profiles[name]) {
-      saveUserProfile(name, profiles[name].avatar);
+    const p = profiles[profileId];
+    if (p) {
+      state.profileId = p.id;
+      state.userName = p.name;
+      state.userAvatar = p.avatar || '👧';
+      state.progress = p.progress || {};
+
+      LEVELS.forEach(level => {
+        if (!state.progress[level.id]) {
+          state.progress[level.id] = {
+            bestScore: 0,
+            completed: false,
+            unlocked: level.id === 1
+          };
+        }
+      });
+
+      p.lastActive = Date.now();
+      saveProfilesDirectory(profiles);
+      localStorage.setItem('chineseLearnerActiveProfileId', p.id);
+      localStorage.setItem('chineseLearnerUserName', p.name);
+      localStorage.setItem('chineseLearnerUserAvatar', state.userAvatar);
+      localStorage.setItem('chineseLearnerProgress', JSON.stringify(state.progress));
+
+      updateUserGreeting();
+      updateOverallProgress();
+      renderLevelSelect();
+      hideProfileModal();
+
+      SoundEffects.playPop();
+      setTimeout(() => {
+        speakBilingual(
+          `切换到 ${p.name} 的学习档案！`,
+          `Switched to ${p.name}'s profile!`
+        );
+      }, 250);
+    }
+  }
+
+  function deleteProfile(profileId, e) {
+    if (e) e.stopPropagation();
+    const profiles = getProfilesDirectory();
+    const p = profiles[profileId];
+    if (!p) return;
+
+    if (confirm(`确定要删除学生 ${p.name} 的档案和学习记录吗？(Delete ${p.name}'s profile?)`)) {
+      SoundEffects.playBubble();
+      delete profiles[profileId];
+      saveProfilesDirectory(profiles);
+
+      const remainingIds = Object.keys(profiles);
+      if (remainingIds.length > 0) {
+        switchProfile(remainingIds[0]);
+      } else {
+        state.profileId = '';
+        state.userName = '';
+        state.progress = {};
+        showProfileModal('edit');
+      }
     }
   }
 
@@ -381,14 +487,32 @@ const App = (() => {
     }
   }
 
-  function showProfileModal() {
+  function showProfileModal(viewMode) {
     const modal = document.getElementById('profile-modal');
-    const input = document.getElementById('user-name-input');
-    const existingContainer = document.getElementById('existing-profiles-container');
-    const profilesGrid = document.getElementById('profiles-list-grid');
+    const listSection = document.getElementById('profiles-list-section');
+    const formSection = document.getElementById('profile-form-section');
+    const formTitle = document.getElementById('profile-form-title');
+    const idInput = document.getElementById('profile-id-input');
+    const nameInput = document.getElementById('user-name-input');
+    const grid = document.getElementById('profiles-list-grid');
 
-    if (modal && input) {
-      input.value = state.userName || '';
+    if (!modal) return;
+
+    const profiles = getProfilesDirectory();
+    const profileIds = Object.keys(profiles);
+
+    // If viewMode is 'edit', open edit form directly
+    if (viewMode === 'edit' || profileIds.length === 0) {
+      if (listSection) listSection.style.display = 'none';
+      if (formSection) formSection.classList.add('active');
+
+      if (idInput) idInput.value = state.profileId || '';
+      if (nameInput) nameInput.value = state.userName || '';
+      if (formTitle) {
+        formTitle.textContent = state.profileId ? `✏️ 编辑 ${state.userName} 的档案 (Edit Profile)` : '➕ 添加新学生档案 (Add New Kid)';
+      }
+
+      // Highlight current avatar
       document.querySelectorAll('.avatar-choice-btn').forEach(btn => {
         if (btn.getAttribute('data-avatar') === (state.userAvatar || '👧')) {
           btn.classList.add('active');
@@ -396,14 +520,15 @@ const App = (() => {
           btn.classList.remove('active');
         }
       });
+      setTimeout(() => nameInput && nameInput.focus(), 150);
+    } else {
+      // Show list of profiles
+      if (formSection) formSection.classList.remove('active');
+      if (listSection) listSection.style.display = 'block';
 
-      // Populate existing profiles quick switcher
-      const profiles = getProfilesDirectory();
-      const profileNames = Object.keys(profiles);
-      if (profileNames.length > 0 && existingContainer && profilesGrid) {
-        existingContainer.classList.remove('hidden');
-        profilesGrid.innerHTML = profileNames.map(pName => {
-          const p = profiles[pName];
+      if (grid) {
+        grid.innerHTML = profileIds.map(id => {
+          const p = profiles[id];
           let stars = 0;
           if (p.progress) {
             LEVELS.forEach(l => {
@@ -413,29 +538,66 @@ const App = (() => {
               else if (sc >= 80) stars += 1;
             });
           }
-          const isActive = pName === state.userName;
+          const isActive = id === state.profileId;
           return `
-            <button type="button" class="profile-pill-btn ${isActive ? 'active' : ''}" data-profile-name="${escapeHtml(pName)}">
-              <span>${p.avatar || '👧'}</span>
-              <span>${escapeHtml(pName)}</span>
-              <span style="color:#FFA502; font-size:0.85rem;">⭐${stars}</span>
-            </button>
+            <div class="profile-kid-card ${isActive ? 'active' : ''}" data-profile-id="${p.id}">
+              <div class="profile-kid-info">
+                <span class="profile-kid-avatar">${p.avatar || '👧'}</span>
+                <div>
+                  <div style="display:flex; align-items:center;">
+                    <span class="profile-kid-name">${escapeHtml(p.name)}</span>
+                    ${isActive ? '<span class="profile-kid-badge">在学 Active</span>' : ''}
+                  </div>
+                  <span class="profile-kid-stars">⭐ ${stars} 颗星 (Stars)</span>
+                </div>
+              </div>
+              <div class="profile-kid-actions">
+                <button type="button" class="btn-card-edit" data-edit-id="${p.id}" title="修改形象与名字 (Edit Name/Avatar)">✏️</button>
+                ${profileIds.length > 1 ? `<button type="button" class="btn-card-delete" data-delete-id="${p.id}" title="删除此档案 (Delete Profile)">🗑️</button>` : ''}
+              </div>
+            </div>
           `;
         }).join('');
 
-        profilesGrid.querySelectorAll('.profile-pill-btn').forEach(btn => {
-          btn.addEventListener('click', () => {
-            const pName = btn.getAttribute('data-profile-name');
-            if (pName) switchProfile(pName);
+        // Wire click handlers for cards & buttons
+        grid.querySelectorAll('.profile-kid-card').forEach(card => {
+          card.addEventListener('click', () => {
+            const pId = card.getAttribute('data-profile-id');
+            if (pId) switchProfile(pId);
           });
         });
-      } else if (existingContainer) {
-        existingContainer.classList.add('hidden');
-      }
 
-      modal.classList.remove('hidden');
-      setTimeout(() => input.focus(), 150);
+        grid.querySelectorAll('.btn-card-edit').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const editId = btn.getAttribute('data-edit-id');
+            const targetP = profiles[editId];
+            if (targetP) {
+              if (listSection) listSection.style.display = 'none';
+              if (formSection) formSection.classList.add('active');
+              if (idInput) idInput.value = targetP.id;
+              if (nameInput) nameInput.value = targetP.name;
+              if (formTitle) formTitle.textContent = `✏️ 编辑 ${targetP.name} 的形象与名字`;
+              state.userAvatar = targetP.avatar || '👧';
+              document.querySelectorAll('.avatar-choice-btn').forEach(b => {
+                if (b.getAttribute('data-avatar') === state.userAvatar) b.classList.add('active');
+                else b.classList.remove('active');
+              });
+              setTimeout(() => nameInput && nameInput.focus(), 150);
+            }
+          });
+        });
+
+        grid.querySelectorAll('.btn-card-delete').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            const delId = btn.getAttribute('data-delete-id');
+            deleteProfile(delId, e);
+          });
+        });
+      }
     }
+
+    modal.classList.remove('hidden');
   }
 
   function hideProfileModal() {
@@ -1888,13 +2050,53 @@ const App = (() => {
     document.getElementById('results-home-btn').addEventListener('click', goToLevels);
     document.getElementById('reset-progress-btn').addEventListener('click', resetProgress);
 
-    // Profile listeners
+    // Profile modal & form listeners
     const profileForm = document.getElementById('profile-form');
     if (profileForm) {
       profileForm.addEventListener('submit', (e) => {
         e.preventDefault();
-        const input = document.getElementById('user-name-input');
-        saveUserProfile(input.value);
+        const idInput = document.getElementById('profile-id-input');
+        const nameInput = document.getElementById('user-name-input');
+        saveUserProfile(idInput ? idInput.value : '', nameInput.value, state.userAvatar);
+      });
+    }
+
+    const closeProfileBtn = document.getElementById('profile-modal-close-btn');
+    if (closeProfileBtn) {
+      closeProfileBtn.addEventListener('click', () => {
+        SoundEffects.playBubble();
+        hideProfileModal();
+      });
+    }
+
+    const profileModal = document.getElementById('profile-modal');
+    if (profileModal) {
+      profileModal.addEventListener('click', (e) => {
+        if (e.target === profileModal && state.userName) {
+          hideProfileModal();
+        }
+      });
+    }
+
+    const btnShowAddProfile = document.getElementById('btn-show-add-profile');
+    if (btnShowAddProfile) {
+      btnShowAddProfile.addEventListener('click', () => {
+        SoundEffects.playBubble();
+        state.profileId = ''; // New child
+        showProfileModal('edit');
+      });
+    }
+
+    const btnCancelProfileEdit = document.getElementById('btn-cancel-profile-edit');
+    if (btnCancelProfileEdit) {
+      btnCancelProfileEdit.addEventListener('click', () => {
+        SoundEffects.playBubble();
+        const profiles = getProfilesDirectory();
+        if (Object.keys(profiles).length > 0) {
+          showProfileModal('list');
+        } else {
+          hideProfileModal();
+        }
       });
     }
 
@@ -1912,7 +2114,8 @@ const App = (() => {
     if (editProfileBtn) {
       editProfileBtn.addEventListener('click', (e) => {
         e.stopPropagation();
-        showProfileModal();
+        SoundEffects.playBubble();
+        showProfileModal('list');
       });
     }
 
@@ -1920,8 +2123,7 @@ const App = (() => {
     if (profileBadge) {
       profileBadge.addEventListener('click', () => {
         SoundEffects.playBubble();
-        const name = state.userName || '小朋友';
-        speakBilingual(`你好，${name}！欢迎来到华语乐园！`, `Hello ${name}! Welcome to Chinese for Kids!`);
+        showProfileModal('list');
       });
     }
 
