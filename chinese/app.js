@@ -1264,11 +1264,72 @@ const App = (() => {
     }
   };
 
+  function playPreRecordedAudio(audioPath) {
+    if (currentAudio) {
+      try {
+        currentAudio.pause();
+        currentAudio.currentTime = 0;
+      } catch(e) {}
+    }
+    currentAudio = new Audio(audioPath);
+    currentAudio.play().catch(err => {
+      console.warn('[Audio] Playback failed, falling back to TTS:', err);
+    });
+  }
+
+  function playRelativeCard(personId, hanzi) {
+    SoundEffects.playPop();
+
+    // Highlight card with glowing border
+    const allCards = document.querySelectorAll(`.relative-card[data-person-id="${personId}"]`);
+    allCards.forEach(c => {
+      c.classList.add('playing');
+      setTimeout(() => c.classList.remove('playing'), 2500);
+    });
+
+    if (personId === 'me_p' || personId === 'me_m' || hanzi === '我') {
+      SoundEffects.playVictory();
+      const descKey = (personId === 'me_m' ? 'me_m_desc' : 'me_p_desc');
+      if (typeof AUDIO_MANIFEST !== 'undefined' && AUDIO_MANIFEST[descKey]) {
+        playPreRecordedAudio(AUDIO_MANIFEST[descKey]);
+      } else {
+        const name = state.userName || '小朋友';
+        speakBilingual(`这是我，${name}，华语小天才！`, `This is me, ${name}, Chinese superstar!`);
+      }
+      return;
+    }
+
+    // 1. Try Neural AI explanation clip (e.g. yeye_desc, dabo_desc)
+    const descKey = personId + '_desc';
+    if (typeof AUDIO_MANIFEST !== 'undefined' && AUDIO_MANIFEST[descKey]) {
+      playPreRecordedAudio(AUDIO_MANIFEST[descKey]);
+      return;
+    }
+
+    // 2. Try single word Neural AI clip (e.g. 爷爷, 大伯)
+    if (typeof AUDIO_MANIFEST !== 'undefined' && AUDIO_MANIFEST[hanzi]) {
+      playPreRecordedAudio(AUDIO_MANIFEST[hanzi]);
+      return;
+    }
+
+    // 3. Fallback to SpeechSynthesis
+    const speechInfo = FAMILY_TREE_SPEECH[personId];
+    if (speechInfo) {
+      speakBilingual(speechInfo.zh, speechInfo.en);
+    } else if (hanzi) {
+      speak(hanzi);
+    }
+  }
+
   function startFamilyTreeMode() {
     currentTreeTab = 'paternal';
     showView('family-tree');
     renderFamilyTree();
-    speakBilingual("欢迎来到家族亲戚树！点击卡片听讲解！", "Welcome to Chinese Family Tree! Tap any card to learn!");
+    if (typeof AUDIO_MANIFEST !== 'undefined' && AUDIO_MANIFEST['tab_paternal']) {
+      playPreRecordedAudio(AUDIO_MANIFEST['tab_paternal']);
+    } else {
+      speakBilingual("欢迎来到家族亲戚树！点击卡片听讲解！", "Welcome to Chinese Family Tree! Tap any card to learn!");
+    }
   }
 
   function renderFamilyTree() {
@@ -1325,24 +1386,7 @@ const App = (() => {
       card.addEventListener('click', () => {
         const personId = card.getAttribute('data-person-id');
         const hanzi = card.getAttribute('data-hanzi');
-
-        SoundEffects.playPop();
-        card.classList.add('playing');
-        setTimeout(() => card.classList.remove('playing'), 2200);
-
-        if (hanzi === '我') {
-          SoundEffects.playVictory();
-          const name = state.userName || '小朋友';
-          speakBilingual(`这是我，${name}，华语小天才！`, `This is me, ${name}, Chinese superstar!`);
-          return;
-        }
-
-        const speechInfo = FAMILY_TREE_SPEECH[personId];
-        if (speechInfo) {
-          speakBilingual(speechInfo.zh, speechInfo.en);
-        } else {
-          speak(hanzi);
-        }
+        playRelativeCard(personId, hanzi);
       });
     });
   }
@@ -1353,7 +1397,7 @@ const App = (() => {
     const nameDisplay = isMe ? (state.userName || '我') : person.hanzi;
 
     return `
-      <div class="relative-card ${isMe ? 'is-me' : ''}" data-person-id="${person.id}" data-hanzi="${person.hanzi}" title="点击听讲解 (Click to listen & learn)">
+      <div class="relative-card ${isMe ? 'is-me' : ''}" data-person-id="${person.id}" data-hanzi="${person.hanzi}" onclick="App.playRelativeCard('${person.id}', '${person.hanzi}')" title="点击听讲解 (Click to listen & learn)">
         <span class="relative-sound-icon">🔊</span>
         <div class="relative-avatar">${avatar}</div>
         <div class="relative-hanzi">${nameDisplay}</div>
@@ -1377,7 +1421,7 @@ const App = (() => {
           </div>
           <div class="guide-points-grid">
             ${tip.points.map(pt => `
-              <div class="guide-point-card" data-label="${escapeHtml(pt.label)}" data-meaning="${escapeHtml(pt.meaning)}" title="点击听讲解 (Click to listen)">
+              <div class="guide-point-card" data-label="${escapeHtml(pt.label)}" data-meaning="${escapeHtml(pt.meaning)}" onclick="App.speakBilingual('${escapeHtml(pt.label)}：${escapeHtml(pt.meaning)}', '${escapeHtml(pt.label)}: ${escapeHtml(pt.meaning)}')" title="点击听讲解 (Click to listen)">
                 <span class="guide-point-label">🔊 ${pt.label}</span>
                 <span class="guide-point-meaning">${pt.meaning}</span>
               </div>
@@ -2790,10 +2834,12 @@ const App = (() => {
   return {
     init,
     speak,
+    speakBilingual,
     goToLevels,
     goToModes,
     selectAvatar,
-    startFamilyTreeMode
+    startFamilyTreeMode,
+    playRelativeCard
   };
 })();
 
