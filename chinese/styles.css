@@ -1137,8 +1137,66 @@ body {
 
 .label-sub {
   font-size: 0.85rem;
-  color: var(--text-muted);
-  font-weight: 600;
+/* Multi-Child Profiles Quick Switcher in Modal */
+.existing-profiles-container {
+  margin-bottom: 1.1rem;
+  width: 100%;
+}
+
+.profiles-list-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: center;
+  margin-bottom: 0.75rem;
+}
+
+.profile-pill-btn {
+  background: #FFF;
+  border: 2px solid #E2E8F0;
+  border-radius: var(--radius-full);
+  padding: 0.45rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  cursor: pointer;
+  transition: var(--transition);
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--text-dark);
+}
+
+.profile-pill-btn:hover {
+  transform: translateY(-2px);
+  border-color: var(--primary);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.06);
+}
+
+.profile-pill-btn.active {
+  background: #FFF5F5;
+  border-color: var(--primary);
+  color: var(--primary);
+  box-shadow: 0 3px 10px rgba(255, 107, 107, 0.25);
+}
+
+.or-divider {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  margin: 0.85rem 0;
+  color: #A0AEC0;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.or-divider::before, .or-divider::after {
+  content: '';
+  flex: 1;
+  border-bottom: 2px dashed #E2E8F0;
+}
+
+.or-divider span {
+  padding: 0 0.6rem;
 }
 
 /* Avatar Picker in Modal */

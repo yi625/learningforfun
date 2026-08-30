@@ -414,6 +414,15 @@
       <p class="modal-subtitle">Welcome to Chinese for Kids Playgroup!</p>
       <p style="font-size: 0.95rem; color: #636E72; margin: 0.35rem 0 1rem 0;">✨ 零基础趣味学中文 (Designed for beginners with 0 Chinese knowledge)</p>
       
+      <!-- Existing Kids Profiles Switcher (多宝贝档案快速切换) -->
+      <div id="existing-profiles-container" class="existing-profiles-container hidden">
+        <label class="modal-label">已保存的学生档案 (Switch Kid Profile):</label>
+        <div class="profiles-list-grid" id="profiles-list-grid">
+          <!-- Dynamically populated: [ 👧 Hanna ⭐ 12 ] [ 👦 Qiqi ⭐ 3 ] -->
+        </div>
+        <div class="or-divider"><span>或者添加 / 编辑档案 (Or Edit / Add New)</span></div>
+      </div>
+
       <form id="profile-form">
         <!-- Choose Character Avatar (Girl / Boy / Kid / Panda) -->
         <label class="modal-label">选择你的形象 (Choose Your Avatar):</label>
@@ -437,8 +446,8 @@
         </div>
 
         <label for="user-name-input" class="modal-label">小朋友，你叫什么名字呀？<br><span class="label-sub">(What is your child's name?)</span></label>
-        <input type="text" id="user-name-input" class="modal-input" placeholder="e.g. Hanna, Alex, Emma..." maxlength="20" required autofocus>
-        <button type="submit" class="modal-start-btn">开始快乐学中文 (Start Learning) 🚀</button>
+        <input type="text" id="user-name-input" class="modal-input" placeholder="e.g. Hanna, Qiqi, Alex..." maxlength="20" required autofocus>
+        <button type="submit" class="modal-start-btn">开始快乐学中文 (Start / Save Profile) 🚀</button>
       </form>
     </div>
   </div>

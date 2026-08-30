@@ -54,15 +54,36 @@ const App = (() => {
     "哇！写得好棒，熊猫宝宝给你点赞！(Panda Bao Bao gives you thumbs up!) 🐼✨"
   ];
 
-  // ---- Progress & LocalStorage ----
-  function loadProgress() {
+  // ---- Multi-Child Profiles & Progress (多学生独立档案系统) ----
+  function getProfilesDirectory() {
     try {
-      const saved = localStorage.getItem('chineseLearnerProgress');
-      if (saved) {
-        state.progress = JSON.parse(saved);
+      const raw = localStorage.getItem('chineseLearnerProfiles');
+      return raw ? JSON.parse(raw) : {};
+    } catch(e) {
+      return {};
+    }
+  }
+
+  function saveProfilesDirectory(dir) {
+    try {
+      localStorage.setItem('chineseLearnerProfiles', JSON.stringify(dir));
+    } catch(e) {}
+  }
+
+  function loadProgress() {
+    const cleanName = (state.userName || '').trim();
+    if (cleanName) {
+      const profiles = getProfilesDirectory();
+      if (profiles[cleanName] && profiles[cleanName].progress) {
+        state.progress = profiles[cleanName].progress;
+      } else {
+        state.progress = {};
       }
-    } catch (e) {
-      console.warn('Could not load progress:', e);
+    } else {
+      try {
+        const saved = localStorage.getItem('chineseLearnerProgress');
+        if (saved) state.progress = JSON.parse(saved);
+      } catch (e) {}
     }
 
     LEVELS.forEach(level => {
@@ -79,6 +100,17 @@ const App = (() => {
   }
 
   function saveProgress() {
+    const cleanName = (state.userName || '').trim();
+    if (cleanName) {
+      const profiles = getProfilesDirectory();
+      profiles[cleanName] = {
+        name: cleanName,
+        avatar: state.userAvatar || '👧',
+        progress: state.progress,
+        lastActive: Date.now()
+      };
+      saveProfilesDirectory(profiles);
+    }
     try {
       localStorage.setItem('chineseLearnerProgress', JSON.stringify(state.progress));
     } catch (e) {
@@ -223,15 +255,46 @@ const App = (() => {
     speakBilingual(text, null);
   }
 
-  // ---- User Profile ----
+  // ---- User Profile (多学生独立档案系统) ----
   function loadUserProfile() {
     try {
-      const savedName = localStorage.getItem('chineseLearnerUserName');
-      const savedAvatar = localStorage.getItem('chineseLearnerUserAvatar');
-      if (savedAvatar) state.userAvatar = savedAvatar;
-      if (savedName && savedName.trim()) {
-        state.userName = savedName.trim();
+      const activeName = localStorage.getItem('chineseLearnerActiveUser') || localStorage.getItem('chineseLearnerUserName');
+      const profiles = getProfilesDirectory();
+
+      if (activeName && activeName.trim()) {
+        const cleanName = activeName.trim();
+        const profile = profiles[cleanName] || {
+          name: cleanName,
+          avatar: localStorage.getItem('chineseLearnerUserAvatar') || '👧',
+          progress: {}
+        };
+
+        state.userName = profile.name;
+        state.userAvatar = profile.avatar || '👧';
+        state.progress = profile.progress || {};
+
+        LEVELS.forEach(level => {
+          if (!state.progress[level.id]) {
+            state.progress[level.id] = {
+              bestScore: 0,
+              completed: false,
+              unlocked: level.id === 1
+            };
+          }
+        });
+
+        profiles[cleanName] = {
+          name: state.userName,
+          avatar: state.userAvatar,
+          progress: state.progress,
+          lastActive: Date.now()
+        };
+        saveProfilesDirectory(profiles);
+        localStorage.setItem('chineseLearnerActiveUser', cleanName);
+
         updateUserGreeting();
+        updateOverallProgress();
+        renderLevelSelect();
       } else {
         showProfileModal();
       }
@@ -240,15 +303,45 @@ const App = (() => {
     }
   }
 
-  function saveUserProfile(name) {
+  function saveUserProfile(name, avatar) {
     const cleanName = (name || '').trim();
     if (!cleanName) return;
+
+    const chosenAvatar = avatar || state.userAvatar || '👧';
+    const profiles = getProfilesDirectory();
+
+    let targetProgress = {};
+    if (profiles[cleanName] && profiles[cleanName].progress) {
+      targetProgress = profiles[cleanName].progress;
+    } else {
+      LEVELS.forEach(level => {
+        targetProgress[level.id] = {
+          bestScore: 0,
+          completed: false,
+          unlocked: level.id === 1
+        };
+      });
+    }
+
     state.userName = cleanName;
-    try {
-      localStorage.setItem('chineseLearnerUserName', cleanName);
-      localStorage.setItem('chineseLearnerUserAvatar', state.userAvatar || '👧');
-    } catch(e) {}
+    state.userAvatar = chosenAvatar;
+    state.progress = targetProgress;
+
+    profiles[cleanName] = {
+      name: cleanName,
+      avatar: chosenAvatar,
+      progress: targetProgress,
+      lastActive: Date.now()
+    };
+
+    saveProfilesDirectory(profiles);
+    localStorage.setItem('chineseLearnerActiveUser', cleanName);
+    localStorage.setItem('chineseLearnerUserName', cleanName);
+    localStorage.setItem('chineseLearnerUserAvatar', chosenAvatar);
+
     updateUserGreeting();
+    updateOverallProgress();
+    renderLevelSelect();
     hideProfileModal();
 
     // Friendly panda sound & read out bilingual welcome in Chinese + English!
@@ -259,6 +352,14 @@ const App = (() => {
         `Hello ${cleanName}! Welcome to Chinese for Kids!`
       );
     }, 300);
+  }
+
+  function switchProfile(name) {
+    SoundEffects.playBubble();
+    const profiles = getProfilesDirectory();
+    if (profiles[name]) {
+      saveUserProfile(name, profiles[name].avatar);
+    }
   }
 
   function updateUserGreeting() {
@@ -283,6 +384,9 @@ const App = (() => {
   function showProfileModal() {
     const modal = document.getElementById('profile-modal');
     const input = document.getElementById('user-name-input');
+    const existingContainer = document.getElementById('existing-profiles-container');
+    const profilesGrid = document.getElementById('profiles-list-grid');
+
     if (modal && input) {
       input.value = state.userName || '';
       document.querySelectorAll('.avatar-choice-btn').forEach(btn => {
@@ -292,6 +396,43 @@ const App = (() => {
           btn.classList.remove('active');
         }
       });
+
+      // Populate existing profiles quick switcher
+      const profiles = getProfilesDirectory();
+      const profileNames = Object.keys(profiles);
+      if (profileNames.length > 0 && existingContainer && profilesGrid) {
+        existingContainer.classList.remove('hidden');
+        profilesGrid.innerHTML = profileNames.map(pName => {
+          const p = profiles[pName];
+          let stars = 0;
+          if (p.progress) {
+            LEVELS.forEach(l => {
+              const sc = p.progress[l.id]?.bestScore || 0;
+              if (sc >= 100) stars += 3;
+              else if (sc >= 90) stars += 2;
+              else if (sc >= 80) stars += 1;
+            });
+          }
+          const isActive = pName === state.userName;
+          return `
+            <button type="button" class="profile-pill-btn ${isActive ? 'active' : ''}" data-profile-name="${escapeHtml(pName)}">
+              <span>${p.avatar || '👧'}</span>
+              <span>${escapeHtml(pName)}</span>
+              <span style="color:#FFA502; font-size:0.85rem;">⭐${stars}</span>
+            </button>
+          `;
+        }).join('');
+
+        profilesGrid.querySelectorAll('.profile-pill-btn').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const pName = btn.getAttribute('data-profile-name');
+            if (pName) switchProfile(pName);
+          });
+        });
+      } else if (existingContainer) {
+        existingContainer.classList.add('hidden');
+      }
+
       modal.classList.remove('hidden');
       setTimeout(() => input.focus(), 150);
     }
@@ -1650,10 +1791,17 @@ const App = (() => {
   }
 
   function resetProgress() {
-    if (confirm('小朋友/家长，确定要重新清空所有学习记录吗？')) {
-      localStorage.removeItem('chineseLearnerProgress');
+    const name = state.userName || '当前学生';
+    if (confirm(`确定要清空 ${name} 的学习记录吗？其他宝贝的记录将不受影响！(Reset progress for ${name}?)`)) {
       state.progress = {};
-      loadProgress();
+      LEVELS.forEach(level => {
+        state.progress[level.id] = {
+          bestScore: 0,
+          completed: false,
+          unlocked: level.id === 1
+        };
+      });
+      saveProgress();
       renderLevelSelect();
     }
   }
