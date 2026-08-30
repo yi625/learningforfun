@@ -1156,10 +1156,119 @@ const App = (() => {
   // ---- View 8: Special Edition Family Tree Explorer ----
   let currentTreeTab = 'paternal';
 
+  // AI Speech Explanations for all Family Tree Relatives
+  const FAMILY_TREE_SPEECH = {
+    'yeye': {
+      zh: '爷爷，爸爸的爸爸！',
+      en: "Grandfather, Dad's Father!"
+    },
+    'nainai': {
+      zh: '奶奶，爸爸的妈妈！',
+      en: "Grandmother, Dad's Mother!"
+    },
+    'waigong': {
+      zh: '外公，也可以叫公公或姥爷，妈妈的爸爸！',
+      en: "Grandfather, Mom's Father!"
+    },
+    'waipo': {
+      zh: '外婆，也可以叫婆婆或姥姥，妈妈的妈妈！',
+      en: "Grandmother, Mom's Mother!"
+    },
+    'dabo': {
+      zh: '大伯，爸爸的哥哥，英语叫 Uncle！',
+      en: "Uncle, Dad's elder brother!"
+    },
+    'bomu': {
+      zh: '伯母，大伯的妻子，英语叫 Aunt！',
+      en: "Aunt, elder uncle's wife!"
+    },
+    'baba': {
+      zh: '爸爸，我的父亲！',
+      en: "Father, Dad!"
+    },
+    'shushu': {
+      zh: '叔叔，爸爸的弟弟，英语叫 Uncle！',
+      en: "Uncle, Dad's younger brother!"
+    },
+    'shenshen': {
+      zh: '婶婶，叔叔的妻子，英语叫 Aunt！',
+      en: "Aunt, younger uncle's wife!"
+    },
+    'gugu': {
+      zh: '姑姑，爸爸的姐妹，英语叫 Aunt！',
+      en: "Aunt, Dad's sister!"
+    },
+    'guzhang': {
+      zh: '姑丈，姑姑的丈夫，英语叫 Uncle！',
+      en: "Uncle, Aunt's husband!"
+    },
+    'jiujiu': {
+      zh: '舅舅，妈妈的兄弟，英语叫 Uncle！',
+      en: "Uncle, Mom's brother!"
+    },
+    'jiuma': {
+      zh: '舅妈，舅舅的妻子，英语叫 Aunt！',
+      en: "Aunt, Mom's brother's wife!"
+    },
+    'mama': {
+      zh: '妈妈，我的母亲！',
+      en: "Mother, Mom!"
+    },
+    'ayi': {
+      zh: '阿姨，也可以叫姨妈，妈妈的姐妹，英语叫 Aunt！',
+      en: "Aunt, Mom's sister!"
+    },
+    'yizhang': {
+      zh: '姨丈，阿姨的丈夫，英语叫 Uncle！',
+      en: "Uncle, Mom's sister's husband!"
+    },
+    'tangge': {
+      zh: '堂哥，大伯或叔叔的儿子，比我大，同姓氏！',
+      en: "Cousin, Dad's brother's elder son!"
+    },
+    'tangjie': {
+      zh: '堂姐，大伯或叔叔的女儿，比我大，同姓氏！',
+      en: "Cousin, Dad's brother's elder daughter!"
+    },
+    'tangdi': {
+      zh: '堂弟，大伯或叔叔的儿子，比我小，同姓氏！',
+      en: "Cousin, Dad's brother's younger son!"
+    },
+    'tangmei': {
+      zh: '堂妹，大伯或叔叔的女儿，比我小，同姓氏！',
+      en: "Cousin, Dad's brother's younger daughter!"
+    },
+    'biaoge_p': {
+      zh: '表哥，姑姑的儿子，比我大！',
+      en: "Cousin, Dad's sister's elder son!"
+    },
+    'biaomei_p': {
+      zh: '表妹，姑姑的女儿，比我小！',
+      en: "Cousin, Dad's sister's younger daughter!"
+    },
+    'biaoge_m': {
+      zh: '表哥，舅舅或阿姨的儿子，比我大！',
+      en: "Cousin, Mom's sibling's elder son!"
+    },
+    'biaojie_m': {
+      zh: '表姐，舅舅或阿姨的女儿，比我大！',
+      en: "Cousin, Mom's sibling's elder daughter!"
+    },
+    'biaodi_m': {
+      zh: '表弟，舅舅或阿姨的儿子，比我小！',
+      en: "Cousin, Mom's sibling's younger son!"
+    },
+    'biaomei_m': {
+      zh: '表妹，舅舅或阿姨的女儿，比我小！',
+      en: "Cousin, Mom's sibling's younger daughter!"
+    }
+  };
+
   function startFamilyTreeMode() {
     currentTreeTab = 'paternal';
     showView('family-tree');
     renderFamilyTree();
+    speakBilingual("欢迎来到家族亲戚树！点击卡片听讲解！", "Welcome to Chinese Family Tree! Tap any card to learn!");
   }
 
   function renderFamilyTree() {
@@ -1211,18 +1320,28 @@ const App = (() => {
 
     container.innerHTML = html;
 
-    // Attach card audio click listeners
+    // Attach card audio click listeners with full AI bilingual explanation!
     container.querySelectorAll('.relative-card').forEach(card => {
       card.addEventListener('click', () => {
+        const personId = card.getAttribute('data-person-id');
         const hanzi = card.getAttribute('data-hanzi');
-        if (hanzi && hanzi !== '我') {
-          SoundEffects.playPop();
-          card.classList.add('playing');
-          speak(hanzi);
-          setTimeout(() => card.classList.remove('playing'), 1200);
-        } else if (hanzi === '我') {
+
+        SoundEffects.playPop();
+        card.classList.add('playing');
+        setTimeout(() => card.classList.remove('playing'), 2200);
+
+        if (hanzi === '我') {
           SoundEffects.playVictory();
-          speakDynamic(`${state.userName || '我'}是华语小天才！`);
+          const name = state.userName || '小朋友';
+          speakBilingual(`这是我，${name}，华语小天才！`, `This is me, ${name}, Chinese superstar!`);
+          return;
+        }
+
+        const speechInfo = FAMILY_TREE_SPEECH[personId];
+        if (speechInfo) {
+          speakBilingual(speechInfo.zh, speechInfo.en);
+        } else {
+          speak(hanzi);
         }
       });
     });
@@ -1230,11 +1349,11 @@ const App = (() => {
 
   function renderRelativeCard(person) {
     const isMe = person.hanzi === '我';
-    const avatar = isMe ? (state.userAvatar || '🧒') : person.emoji;
+    const avatar = isMe ? (state.userAvatar || '🐼') : person.emoji;
     const nameDisplay = isMe ? (state.userName || '我') : person.hanzi;
 
     return `
-      <div class="relative-card ${isMe ? 'is-me' : ''}" data-hanzi="${person.hanzi}" title="点击听发音 (Click to listen)">
+      <div class="relative-card ${isMe ? 'is-me' : ''}" data-person-id="${person.id}" data-hanzi="${person.hanzi}" title="点击听讲解 (Click to listen & learn)">
         <span class="relative-sound-icon">🔊</span>
         <div class="relative-avatar">${avatar}</div>
         <div class="relative-hanzi">${nameDisplay}</div>
@@ -1258,8 +1377,8 @@ const App = (() => {
           </div>
           <div class="guide-points-grid">
             ${tip.points.map(pt => `
-              <div class="guide-point-card">
-                <span class="guide-point-label">${pt.label}</span>
+              <div class="guide-point-card" data-label="${escapeHtml(pt.label)}" data-meaning="${escapeHtml(pt.meaning)}" title="点击听讲解 (Click to listen)">
+                <span class="guide-point-label">🔊 ${pt.label}</span>
                 <span class="guide-point-meaning">${pt.meaning}</span>
               </div>
             `).join('')}
@@ -1270,6 +1389,16 @@ const App = (() => {
 
     html += `</div>`;
     container.innerHTML = html;
+
+    // Attach click listeners to guide cards
+    container.querySelectorAll('.guide-point-card').forEach(card => {
+      card.addEventListener('click', () => {
+        SoundEffects.playPop();
+        const label = card.getAttribute('data-label');
+        const meaning = card.getAttribute('data-meaning');
+        speakBilingual(`${label}：${meaning}`, `${label}: ${meaning}`);
+      });
+    });
   }
 
   function selectLevel(level) {
@@ -2626,6 +2755,13 @@ const App = (() => {
         if (tab) {
           currentTreeTab = tab;
           renderFamilyTree();
+          if (tab === 'paternal') {
+            speakBilingual("爸爸这一边：认识爷爷、奶奶、大伯、叔叔、姑姑与堂兄弟姐妹！", "Father's side: grandparents, uncles, aunts and paternal cousins!");
+          } else if (tab === 'maternal') {
+            speakBilingual("妈妈这一边：认识外公、外婆、舅舅、阿姨与表兄弟姐妹！", "Mother's side: grandparents, uncles, aunts and maternal cousins!");
+          } else if (tab === 'guide') {
+            speakBilingual("亲戚称谓秘籍：为什么英文叫 Uncle，华语分大伯、叔叔、舅舅、姑丈与姨丈！", "Chinese relative guide: why Chinese distinguishes different uncles and cousins!");
+          }
         }
       });
     });
