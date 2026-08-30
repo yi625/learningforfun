@@ -39,6 +39,16 @@ const LEVELS = [
       { hanzi: "黄色", pinyin: "huáng sè", english: "Yellow", emoji: "🟡", category: "颜色 Color", type: "word" },
       { hanzi: "太阳", pinyin: "tài yáng", english: "Sun", emoji: "☀️", category: "自然 Nature", type: "word" },
       { hanzi: "月亮", pinyin: "yuè liang", english: "Moon", emoji: "🌙", category: "自然 Nature", type: "word" },
+      // Personal Pronouns (人称代词基础)
+      { hanzi: "我", pinyin: "wǒ", english: "I / Me", emoji: "🙋", category: "人称代词 Pronoun", type: "word" },
+      { hanzi: "你", pinyin: "nǐ", english: "You (singular)", emoji: "👉", category: "人称代词 Pronoun", type: "word" },
+      { hanzi: "他", pinyin: "tā", english: "He / Him", emoji: "👦", category: "人称代词 Pronoun", type: "word" },
+      { hanzi: "她", pinyin: "tā", english: "She / Her", emoji: "👧", category: "人称代词 Pronoun", type: "word" },
+      { hanzi: "它", pinyin: "tā", english: "It (animals/things)", emoji: "🐱", category: "人称代词 Pronoun", type: "word" },
+      { hanzi: "我们", pinyin: "wǒ men", english: "We / Us", emoji: "👨‍👩‍👧‍👦", category: "人称代词 Pronoun", type: "phrase" },
+      { hanzi: "你们", pinyin: "nǐ men", english: "You (plural)", emoji: "👥", category: "人称代词 Pronoun", type: "phrase" },
+      { hanzi: "他们", pinyin: "tā men", english: "They / Them (male/mixed)", emoji: "🧑‍🤝‍🧑", category: "人称代词 Pronoun", type: "phrase" },
+      { hanzi: "她们", pinyin: "tā men", english: "They / Them (female)", emoji: "👭", category: "人称代词 Pronoun", type: "phrase" },
       // Animals & Body
       { hanzi: "猫", pinyin: "māo", english: "Cat", emoji: "🐱", category: "动物 Animal", type: "word" },
       { hanzi: "狗", pinyin: "gǒu", english: "Dog", emoji: "🐶", category: "动物 Animal", type: "word" },
