@@ -9,8 +9,9 @@ const App = (() => {
     currentLevel: null,
     currentCardIndex: 0,
     currentWriteIndex: 0,
-    currentBoxIndex: 1,
-    boxCompleted: { 1: false, 2: false, 3: false },
+    activeQuadIndex: 1,
+    activeDrawingBox: 1,
+    quadCompleted: { 1: false, 2: false, 3: false, 4: false },
     currentCharIndex: 0,
     currentColor: '#2D3436',
     isDrawing: false,
@@ -33,7 +34,8 @@ const App = (() => {
 
   let currentAudio = null;
   let recognition = null;
-  let canvasCtx = null;
+  let quadCanvases = [null, null, null, null];
+  let quadContexts = [null, null, null, null];
 
   // Mascot encouraging quotes
   const PANDA_PRAISES = [
@@ -810,131 +812,159 @@ const App = (() => {
     }
   }
 
-  function switchPracticeBox(boxNum) {
-    SoundEffects.playBubble();
-    state.currentBoxIndex = boxNum;
-
-    // Update tabs UI
-    for (let i = 1; i <= 3; i++) {
-      const tab = document.getElementById(`write-box-tab-${i}`);
-      if (tab) {
-        if (i === boxNum) tab.classList.add('active');
-        else tab.classList.remove('active');
-      }
-    }
-
-    // Update watermark opacity based on box
-    const watermark = document.getElementById('write-watermark');
-    if (watermark) {
-      if (boxNum === 1) {
-        watermark.style.opacity = '0.35'; // Box 1: Trace
-      } else if (boxNum === 2) {
-        watermark.style.opacity = '0.12'; // Box 2: Faint outline
-      } else {
-        watermark.style.opacity = '0'; // Box 3: Free hand
-      }
-    }
-
-    clearCanvas();
-  }
-
-  // ---- View 7: Write & Trace Mode ----
+  // ---- View 7: 4-Box Write & Trace Mode ----
   function startWriteMode() {
     state.lastMode = 'write';
     state.currentWriteIndex = 0;
     state.currentCharIndex = 0;
+    state.activeQuadIndex = 1;
     showView('write');
     setTimeout(() => {
-      initWritingCanvas();
+      initQuadCanvases();
       renderWriteCard();
     }, 50);
   }
 
-  function initWritingCanvas() {
-    const canvas = document.getElementById('write-canvas');
-    if (!canvas) return;
-    canvasCtx = canvas.getContext('2d');
-    
-    // Support HiDPI
+  function initQuadCanvases() {
     const dpr = window.devicePixelRatio || 1;
-    const rect = canvas.getBoundingClientRect();
-    const size = rect.width || 320;
-    canvas.width = size * dpr;
-    canvas.height = size * dpr;
-    canvasCtx.scale(dpr, dpr);
-    
-    canvasCtx.lineCap = 'round';
-    canvasCtx.lineJoin = 'round';
-    canvasCtx.lineWidth = 14;
-    canvasCtx.strokeStyle = state.currentColor;
+    for (let i = 1; i <= 4; i++) {
+      const canvas = document.getElementById(`write-canvas-${i}`);
+      if (!canvas) continue;
+      const ctx = canvas.getContext('2d');
+      const rect = canvas.getBoundingClientRect();
+      const size = rect.width || 220;
+      canvas.width = size * dpr;
+      canvas.height = size * dpr;
+      ctx.scale(dpr, dpr);
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.lineWidth = 10;
+      ctx.strokeStyle = state.currentColor || '#2D3436';
 
-    // Mouse handlers
-    canvas.onmousedown = (e) => startDraw(e.offsetX, e.offsetY);
-    canvas.onmousemove = (e) => {
-      if (state.isDrawing) draw(e.offsetX, e.offsetY);
-    };
-    canvas.onmouseup = () => stopDraw();
-    canvas.onmouseleave = () => stopDraw();
+      quadCanvases[i - 1] = canvas;
+      quadContexts[i - 1] = ctx;
 
-    // Touch handlers for tablets/phones
-    canvas.ontouchstart = (e) => {
-      e.preventDefault();
-      const touch = e.touches[0];
-      const box = canvas.getBoundingClientRect();
-      startDraw(touch.clientX - box.left, touch.clientY - box.top);
-    };
-    canvas.ontouchmove = (e) => {
-      e.preventDefault();
-      if (!state.isDrawing) return;
-      const touch = e.touches[0];
-      const box = canvas.getBoundingClientRect();
-      draw(touch.clientX - box.left, touch.clientY - box.top);
-    };
-    canvas.ontouchend = (e) => {
-      e.preventDefault();
-      stopDraw();
-    };
-  }
+      // Mouse drawing
+      canvas.onmousedown = (e) => {
+        setActiveQuadBox(i);
+        startQuadDraw(i, e.offsetX, e.offsetY);
+      };
+      canvas.onmousemove = (e) => {
+        if (state.isDrawing && state.activeDrawingBox === i) {
+          drawQuad(i, e.offsetX, e.offsetY);
+        }
+      };
+      canvas.onmouseup = () => stopDraw();
+      canvas.onmouseleave = () => stopDraw();
 
-  function startDraw(x, y) {
-    state.isDrawing = true;
-    state.lastX = x;
-    state.lastY = y;
-    if (canvasCtx) {
-      canvasCtx.strokeStyle = state.currentColor;
-      canvasCtx.beginPath();
-      canvasCtx.arc(x, y, 7, 0, Math.PI * 2);
-      canvasCtx.fillStyle = state.currentColor;
-      canvasCtx.fill();
+      // Touch drawing (phones/tablets)
+      canvas.ontouchstart = (e) => {
+        e.preventDefault();
+        setActiveQuadBox(i);
+        const touch = e.touches[0];
+        const box = canvas.getBoundingClientRect();
+        startQuadDraw(i, touch.clientX - box.left, touch.clientY - box.top);
+      };
+      canvas.ontouchmove = (e) => {
+        e.preventDefault();
+        if (!state.isDrawing || state.activeDrawingBox !== i) return;
+        const touch = e.touches[0];
+        const box = canvas.getBoundingClientRect();
+        drawQuad(i, touch.clientX - box.left, touch.clientY - box.top);
+      };
+      canvas.ontouchend = (e) => {
+        e.preventDefault();
+        stopDraw();
+      };
     }
   }
 
-  function draw(x, y) {
-    if (!state.isDrawing || !canvasCtx) return;
-    canvasCtx.strokeStyle = state.currentColor;
-    canvasCtx.beginPath();
-    canvasCtx.moveTo(state.lastX, state.lastY);
-    canvasCtx.lineTo(x, y);
-    canvasCtx.stroke();
+  function setActiveQuadBox(boxNum) {
+    state.activeQuadIndex = boxNum;
+    for (let i = 1; i <= 4; i++) {
+      const card = document.getElementById(`quad-card-${i}`);
+      if (card) {
+        if (i === boxNum) card.classList.add('active');
+        else card.classList.remove('active');
+      }
+    }
+  }
+
+  function startQuadDraw(boxNum, x, y) {
+    state.isDrawing = true;
+    state.activeDrawingBox = boxNum;
+    state.lastX = x;
+    state.lastY = y;
+    const ctx = quadContexts[boxNum - 1];
+    if (ctx) {
+      ctx.strokeStyle = state.currentColor;
+      ctx.beginPath();
+      ctx.arc(x, y, 5, 0, Math.PI * 2);
+      ctx.fillStyle = state.currentColor;
+      ctx.fill();
+    }
+  }
+
+  function drawQuad(boxNum, x, y) {
+    if (!state.isDrawing || !quadContexts[boxNum - 1]) return;
+    const ctx = quadContexts[boxNum - 1];
+    ctx.strokeStyle = state.currentColor;
+    ctx.beginPath();
+    ctx.moveTo(state.lastX, state.lastY);
+    ctx.lineTo(x, y);
+    ctx.stroke();
     state.lastX = x;
     state.lastY = y;
   }
 
   function stopDraw() {
     state.isDrawing = false;
+    state.activeDrawingBox = null;
   }
 
-  function clearCanvas() {
+  function clearActiveBox() {
     SoundEffects.playBubble();
-    const canvas = document.getElementById('write-canvas');
-    if (canvas && canvasCtx) {
-      canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
+    const idx = state.activeQuadIndex;
+    const canvas = quadCanvases[idx - 1];
+    const ctx = quadContexts[idx - 1];
+    if (canvas && ctx) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
     }
+    state.quadCompleted[idx] = false;
+    const star = document.getElementById(`quad-star-${idx}`);
+    if (star) star.textContent = '☆';
+    const card = document.getElementById(`quad-card-${idx}`);
+    if (card) card.classList.remove('completed');
+    const box = document.getElementById(`quad-box-${idx}`);
+    if (box) box.classList.remove('pass-glow', 'shake-error');
+
+    const fb = document.getElementById('write-feedback');
+    if (fb) fb.classList.add('hidden');
+  }
+
+  function clearAllBoxes() {
+    SoundEffects.playBubble();
+    for (let i = 1; i <= 4; i++) {
+      const canvas = quadCanvases[i - 1];
+      const ctx = quadContexts[i - 1];
+      if (canvas && ctx) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+      }
+      state.quadCompleted[i] = false;
+      const star = document.getElementById(`quad-star-${i}`);
+      if (star) star.textContent = '☆';
+      const card = document.getElementById(`quad-card-${i}`);
+      if (card) card.classList.remove('completed');
+      const box = document.getElementById(`quad-box-${i}`);
+      if (box) box.classList.remove('pass-glow', 'shake-error');
+    }
+    const fb = document.getElementById('write-feedback');
+    if (fb) fb.classList.add('hidden');
   }
 
   function toggleGuide() {
     SoundEffects.playBubble();
-    const watermark = document.getElementById('write-watermark');
+    const watermark = document.getElementById('write-watermark-1');
     if (watermark) {
       watermark.classList.toggle('hidden-guide');
     }
@@ -975,30 +1005,19 @@ const App = (() => {
 
     const currentChar = chars[state.currentCharIndex] || word.hanzi;
 
-    // Reset 3 boxes
-    state.currentBoxIndex = 1;
-    state.boxCompleted = { 1: false, 2: false, 3: false };
-    for (let i = 1; i <= 3; i++) {
-      const tab = document.getElementById(`write-box-tab-${i}`);
-      const star = document.getElementById(`box-star-${i}`);
-      if (tab) {
-        tab.classList.remove('completed');
-        if (i === 1) tab.classList.add('active');
-        else tab.classList.remove('active');
-      }
-      if (star) star.textContent = '☆';
-    }
-
     // Update stroke demo
     updateStrokeAnimation(currentChar);
 
-    // Update watermark text & style
-    const watermark = document.getElementById('write-watermark');
-    watermark.textContent = currentChar;
-    watermark.style.fontSize = '13rem';
-    watermark.style.opacity = '0.35';
+    // Update Box 1 guide watermark
+    const watermark1 = document.getElementById('write-watermark-1');
+    if (watermark1) {
+      watermark1.textContent = currentChar;
+      watermark1.style.opacity = '0.45';
+    }
 
-    clearCanvas();
+    // Reset all 4 canvases and stars
+    clearAllBoxes();
+    setActiveQuadBox(1);
 
     document.getElementById('write-prev').disabled = idx === 0;
     document.getElementById('write-next').disabled = idx === total - 1;
@@ -1025,9 +1044,9 @@ const App = (() => {
     }, 200);
   }
 
-  // ---- AI Handwriting Verification Engine ----
+  // ---- AI Handwriting Verification Engine for Quad Boxes ----
   function verifyWritingAccuracy(canvas, expectedChar) {
-    if (!canvas) return { pass: false, message: '请在田字格里写字哦！(Please write on canvas!)' };
+    if (!canvas) return { pass: false, drawn: false, message: '请在田字格里写字哦！(Please write on canvas!)' };
     const ctx = canvas.getContext('2d');
     const w = canvas.width;
     const h = canvas.height;
@@ -1045,11 +1064,12 @@ const App = (() => {
       }
     }
 
-    if (drawnPoints.length < 35) {
+    if (drawnPoints.length < 25) {
       return {
         pass: false,
+        drawn: false,
         reason: 'too_empty',
-        message: '✏️ 还没有写字哦，请先在田字格里书写汉字！(Please write the character first!)'
+        message: '✏️ 还没有写字哦！(Please write first!)'
       };
     }
 
@@ -1078,10 +1098,10 @@ const App = (() => {
     }
 
     if (targetPoints.length === 0) {
-      return { pass: true, message: '🎉 写好了！(Done!)' };
+      return { pass: true, drawn: true, message: '🎉 写好了！(Done!)' };
     }
 
-    // Tolerance distance (in canvas pixels): 24px for natural kid handwriting stroke width
+    // Tolerance distance (in canvas pixels): 24px
     const TOLERANCE_SQ = 24 * 24;
 
     let inBoundsCount = 0;
@@ -1116,126 +1136,129 @@ const App = (() => {
     const accuracy = inBoundsCount / (inBoundsCount + outOfBoundsCount + 1e-5);
     const coverage = coveredTargetCount / (targetPoints.length + 1e-5);
 
-    console.log(`[AI Writing Check "${expectedChar}"] In: ${inBoundsCount}, Out: ${outOfBoundsCount}, Acc: ${(accuracy*100).toFixed(1)}%, Cov: ${(coverage*100).toFixed(1)}%`);
-
-    // Wild scribbles (like in random drawings) have high out-of-bounds counts
-    if (accuracy < 0.50) {
+    // Reject wild scribbles
+    if (accuracy < 0.48) {
       return {
         pass: false,
+        drawn: true,
         reason: 'inaccurate',
-        message: `🤔 “${expectedChar}” 笔画写偏啦！请沿着红线认真描红哦！(Strokes went outside, please trace along the guide lines!)`
+        message: `🤔 笔画写偏啦！请沿着字形认真书写！(Strokes went outside, please write carefully!)`
       };
     }
 
-    if (coverage < 0.28) {
+    if (coverage < 0.25) {
       return {
         pass: false,
+        drawn: true,
         reason: 'incomplete',
-        message: `✏️ “${expectedChar}” 笔画还没写完整哦，继续把字写完吧！(Character is incomplete, please finish all strokes!)`
+        message: `✏️ 笔画还没写完整哦，继续把字写完吧！(Incomplete strokes, please finish the character!)`
       };
     }
 
     return {
       pass: true,
+      drawn: true,
       accuracy: Math.round(accuracy * 100),
-      message: accuracy >= 0.80
-        ? `🌟 太棒了！“${expectedChar}” 写得非常标准漂亮！(Excellent! Accurate handwriting!)`
-        : `👍 很好！“${expectedChar}” 写对了！(Good job! Writing is correct!)`
+      message: `🌟 写得非常标准漂亮！(Accurate handwriting!)`
     };
   }
 
   function showWriteFeedback(message, type) {
     const el = document.getElementById('write-feedback');
-    const box = document.getElementById('tianzige-box');
     if (!el) return;
 
     el.textContent = message;
     el.className = `write-feedback ${type}`;
     el.classList.remove('hidden');
-
-    if (box) {
-      box.classList.remove('pass-glow', 'shake-error');
-      void box.offsetWidth; // trigger reflow
-      if (type === 'success') {
-        box.classList.add('pass-glow');
-      } else {
-        box.classList.add('shake-error');
-      }
-    }
   }
 
   function finishWriting() {
     const word = state.currentLevel.vocabulary[state.currentWriteIndex];
     const chars = Array.from(word.hanzi);
     const currentChar = chars[state.currentCharIndex] || word.hanzi;
-    const canvas = document.getElementById('write-canvas');
 
-    // Run writing accuracy check
-    const checkResult = verifyWritingAccuracy(canvas, currentChar);
+    let anyDrawn = false;
+    let anyFailed = false;
+    let failedBoxIndex = null;
+    let passedCount = 0;
 
-    if (!checkResult.pass) {
-      SoundEffects.playTryAgain();
-      showWriteFeedback(checkResult.message, 'retry');
-      return; // DO NOT PASS OR ADVANCE!
-    }
+    for (let i = 1; i <= 4; i++) {
+      const canvas = quadCanvases[i - 1];
+      const box = document.getElementById(`quad-box-${i}`);
+      const card = document.getElementById(`quad-card-${i}`);
+      const star = document.getElementById(`quad-star-${i}`);
 
-    // PASS!
-    const boxNum = state.currentBoxIndex;
-    state.boxCompleted[boxNum] = true;
+      if (box) box.classList.remove('pass-glow', 'shake-error');
 
-    showWriteFeedback(checkResult.message, 'success');
+      const check = verifyWritingAccuracy(canvas, currentChar);
 
-    // Update star on this box tab
-    const starEl = document.getElementById(`box-star-${boxNum}`);
-    if (starEl) starEl.textContent = '⭐';
-    const tabEl = document.getElementById(`write-box-tab-${boxNum}`);
-    if (tabEl) tabEl.classList.add('completed');
-
-    if (boxNum < 3) {
-      SoundEffects.playPop();
-      setTimeout(() => {
-        switchPracticeBox(boxNum + 1);
-        const fb = document.getElementById('write-feedback');
-        if (fb) fb.classList.add('hidden');
-      }, 700);
-    } else {
-      // Completed all 3 boxes!
-      SoundEffects.playVictory();
-      speakDynamic('太棒了！');
-
-      // If multi-character word and has remaining character
-      if (state.currentCharIndex < chars.length - 1) {
-        setTimeout(() => {
-          state.currentCharIndex++;
-          renderWriteCard();
-          const fb = document.getElementById('write-feedback');
-          if (fb) fb.classList.add('hidden');
-        }, 1200);
+      if (check.drawn) {
+        anyDrawn = true;
+        if (check.pass) {
+          state.quadCompleted[i] = true;
+          passedCount++;
+          if (star) star.textContent = '⭐';
+          if (card) card.classList.add('completed');
+          if (box) box.classList.add('pass-glow');
+        } else {
+          state.quadCompleted[i] = false;
+          anyFailed = true;
+          if (!failedBoxIndex) failedBoxIndex = i;
+          if (box) box.classList.add('shake-error');
+          if (star) star.textContent = '☆';
+          if (card) card.classList.remove('completed');
+        }
       } else {
-        // Move to next word
-        setTimeout(() => {
-          if (state.currentWriteIndex < state.currentLevel.vocabulary.length - 1) {
-            writeNext();
-          } else {
-            showQuizResults('write');
-          }
-          const fb = document.getElementById('write-feedback');
-          if (fb) fb.classList.add('hidden');
-        }, 1200);
+        // Not drawn yet
+        state.quadCompleted[i] = false;
+        if (star) star.textContent = '☆';
+        if (card) card.classList.remove('completed');
       }
     }
-  }
 
-  function clearCanvas() {
-    SoundEffects.playBubble();
-    const canvas = document.getElementById('write-canvas');
-    if (canvas && canvasCtx) {
-      canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
+    if (!anyDrawn) {
+      SoundEffects.playTryAgain();
+      showWriteFeedback('✏️ 请先在田字格里书写汉字哦！(Please write in the boxes first!)', 'retry');
+      return;
     }
-    const fb = document.getElementById('write-feedback');
-    if (fb) fb.classList.add('hidden');
-    const box = document.getElementById('tianzige-box');
-    if (box) box.classList.remove('pass-glow', 'shake-error');
+
+    if (anyFailed && failedBoxIndex) {
+      SoundEffects.playTryAgain();
+      showWriteFeedback(`🤔 第 ${failedBoxIndex} 格笔画写偏啦！请认真书写！(Box ${failedBoxIndex} strokes are inaccurate!)`, 'retry');
+      return;
+    }
+
+    if (passedCount < 4) {
+      SoundEffects.playPop();
+      showWriteFeedback(`👍 很棒！已写好 ${passedCount} / 4 格！继续把剩下 ${4 - passedCount} 格也写完吧！(Completed ${passedCount}/4 boxes, keep going!)`, 'success');
+      return;
+    }
+
+    // ALL 4 BOXES COMPLETED!
+    SoundEffects.playVictory();
+    showWriteFeedback(`🎉 太棒了！4个格子全部写完啦！(All 4 boxes completed! Excellent!) ⭐⭐⭐⭐`, 'success');
+    speakDynamic('太棒了！');
+
+    // If multi-character word and has remaining character
+    if (state.currentCharIndex < chars.length - 1) {
+      setTimeout(() => {
+        state.currentCharIndex++;
+        renderWriteCard();
+        const fb = document.getElementById('write-feedback');
+        if (fb) fb.classList.add('hidden');
+      }, 1300);
+    } else {
+      // Move to next word
+      setTimeout(() => {
+        if (state.currentWriteIndex < state.currentLevel.vocabulary.length - 1) {
+          writeNext();
+        } else {
+          showQuizResults('write');
+        }
+        const fb = document.getElementById('write-feedback');
+        if (fb) fb.classList.add('hidden');
+      }, 1300);
+    }
   }
 
   function writeNext() {
@@ -1667,7 +1690,10 @@ const App = (() => {
       const word = state.currentLevel.vocabulary[state.currentWriteIndex];
       speak(word.hanzi);
     });
-    document.getElementById('write-clear-btn').addEventListener('click', clearCanvas);
+    document.getElementById('write-clear-btn').addEventListener('click', clearActiveBox);
+    const clearAllBtn = document.getElementById('write-clear-all-btn');
+    if (clearAllBtn) clearAllBtn.addEventListener('click', clearAllBoxes);
+
     document.getElementById('write-guide-toggle').addEventListener('click', toggleGuide);
     document.getElementById('write-finish-btn').addEventListener('click', finishWriting);
 
@@ -1681,11 +1707,11 @@ const App = (() => {
       });
     }
 
-    // 3 Writing box practice tabs
-    document.querySelectorAll('.write-box-tab').forEach(tab => {
-      tab.addEventListener('click', () => {
-        const boxNum = parseInt(tab.getAttribute('data-box'), 10);
-        if (boxNum) switchPracticeBox(boxNum);
+    // 4-Box card click selectors
+    document.querySelectorAll('.tianzige-quad-card').forEach(card => {
+      card.addEventListener('click', () => {
+        const boxNum = parseInt(card.getAttribute('data-box'), 10);
+        if (boxNum) setActiveQuadBox(boxNum);
       });
     });
 

@@ -1530,29 +1530,98 @@ body {
   color: white;
 }
 
-/* Tianzige Card */
-.tianzige-card {
-  background: var(--card-bg);
-  border-radius: var(--radius-lg);
-  padding: 1.25rem;
-  box-shadow: var(--shadow-lg);
-  border: 4px solid #FFEAA7;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin-bottom: 1.25rem;
-  user-select: none;
+/* 4-Box Tianzige Practice Grid (同页4格习字本) */
+.tianzige-quad-container {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.85rem;
+  width: 100%;
+  max-width: 520px;
+  margin: 0 auto 1rem auto;
 }
 
-.tianzige-box {
-  width: 320px;
-  height: 320px;
+.tianzige-quad-card {
+  background: var(--card-bg);
+  border-radius: var(--radius-md);
+  padding: 0.6rem;
+  box-shadow: var(--shadow-sm);
+  border: 3px solid #E2E8F0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: var(--transition);
+  cursor: pointer;
+}
+
+.tianzige-quad-card:hover {
+  transform: translateY(-2px);
+  border-color: #CBD5E1;
+}
+
+.tianzige-quad-card.active {
+  border-color: var(--primary);
+  box-shadow: 0 4px 14px rgba(255, 107, 107, 0.25);
+  background: #FFFDFC;
+}
+
+.tianzige-quad-card.completed {
+  border-color: #2ECC71;
+  background: #F0FFF4;
+}
+
+.quad-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin-bottom: 0.4rem;
+  padding: 0 0.2rem;
+}
+
+.quad-num {
+  width: 22px;
+  height: 22px;
+  background: #DFE4EA;
+  color: var(--text-dark);
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+
+.tianzige-quad-card.active .quad-num {
+  background: var(--primary);
+  color: white;
+}
+
+.tianzige-quad-card.completed .quad-num {
+  background: #2ECC71;
+  color: white;
+}
+
+.quad-title {
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: var(--text-dark);
+}
+
+.quad-star {
+  font-size: 1rem;
+  color: #FFA502;
+}
+
+.tianzige-quad-box {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  max-width: 230px;
   position: relative;
   background: #FFF;
-  border: 4px solid #FF7675;
-  border-radius: 12px;
+  border: 3px solid #FF7675;
+  border-radius: 10px;
   overflow: hidden;
-  box-shadow: inset 0 0 10px rgba(0,0,0,0.03);
+  box-shadow: inset 0 0 8px rgba(0,0,0,0.03);
 }
 
 /* Red Dotted Tianzige Grid */
@@ -1580,20 +1649,21 @@ body {
   border-left: 2px dashed rgba(255, 118, 117, 0.45);
 }
 
-/* Watermark Ghost Hanzi */
+/* Watermark Ghost Hanzi in Box 1 */
 .tianzige-watermark {
   position: absolute;
   top: 0; left: 0; right: 0; bottom: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 13rem;
+  font-size: 7.5rem;
   font-weight: 900;
-  color: #E2E8F0;
+  color: #CBD5E1;
   font-family: 'Noto Sans SC', 'Kaiti', 'STKaiti', serif;
   line-height: 1;
   pointer-events: none;
   user-select: none;
+  opacity: 0.45;
   transition: opacity 0.3s ease;
 }
 
@@ -1601,15 +1671,27 @@ body {
   opacity: 0 !important;
 }
 
-/* Drawing Canvas */
-#write-canvas {
+/* Drawing Canvas for Quad Boxes */
+.tianzige-quad-box canvas {
   position: absolute;
   top: 0;
   left: 0;
-  width: 320px;
-  height: 320px;
+  width: 100%;
+  height: 100%;
   cursor: crosshair;
-  touch-action: none; /* Prevents scroll while drawing on touch devices */
+  touch-action: none;
+}
+
+.tianzige-quad-box.pass-glow {
+  border-color: #2ECC71 !important;
+  box-shadow: 0 0 16px rgba(46, 204, 113, 0.45) !important;
+  animation: pop 0.4s ease;
+}
+
+.tianzige-quad-box.shake-error {
+  border-color: #E74C3C !important;
+  box-shadow: 0 0 14px rgba(231, 76, 60, 0.35) !important;
+  animation: shake 0.45s ease;
 }
 
 /* Tools Bar */
