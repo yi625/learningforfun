@@ -2023,6 +2023,321 @@ body {
   animation: shake 0.45s ease;
 }
 
+/* ============================================================
+   VIEW 8: SPECIAL EDITION FAMILY TREE (家族亲戚树)
+   ============================================================ */
+.family-tree-header {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.family-tree-badge {
+  display: inline-block;
+  background: linear-gradient(135deg, #10B981, #059669);
+  color: white;
+  font-weight: 800;
+  font-size: 0.85rem;
+  padding: 0.3rem 0.85rem;
+  border-radius: 20px;
+  margin-bottom: 0.4rem;
+  box-shadow: 0 4px 10px rgba(16, 185, 129, 0.25);
+}
+
+.family-tree-header h2 {
+  font-size: 1.8rem;
+  font-weight: 900;
+  color: #1E293B;
+  margin-bottom: 0.3rem;
+}
+
+.family-tree-header p {
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.family-tree-tabs {
+  display: flex;
+  justify-content: center;
+  gap: 0.6rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.tree-tab-btn {
+  background: white;
+  border: 2px solid #E2E8F0;
+  color: var(--text-dark);
+  font-weight: 800;
+  font-size: 0.95rem;
+  padding: 0.65rem 1.1rem;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+}
+
+.tree-tab-btn:hover {
+  border-color: #10B981;
+  background: #F0FDF4;
+  color: #059669;
+  transform: translateY(-2px);
+}
+
+.tree-tab-btn.active {
+  background: linear-gradient(135deg, #10B981, #059669);
+  border-color: #059669;
+  color: white;
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
+  transform: scale(1.02);
+}
+
+/* Tree Diagram Container */
+.tree-diagram-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  max-width: 900px;
+  margin: 0 auto 2rem;
+  padding: 1rem;
+  background: #F8FAFC;
+  border: 2px dashed #CBD5E1;
+  border-radius: var(--radius-lg);
+  position: relative;
+}
+
+.tree-tier-title {
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: #64748B;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.6rem;
+  text-align: center;
+}
+
+.tree-tier {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: stretch;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.tree-connector {
+  width: 2px;
+  height: 20px;
+  background: #CBD5E1;
+  position: relative;
+}
+
+.tree-connector::after {
+  content: '▼';
+  position: absolute;
+  bottom: -6px;
+  left: -5px;
+  font-size: 0.6rem;
+  color: #94A3B8;
+}
+
+/* Relative Card */
+.relative-card {
+  background: white;
+  border: 2px solid #E2E8F0;
+  border-radius: var(--radius-md);
+  padding: 0.85rem 0.75rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  min-width: 110px;
+  max-width: 140px;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 0 3px 8px rgba(0,0,0,0.04);
+  position: relative;
+}
+
+.relative-card:hover, .relative-card:active {
+  border-color: #10B981;
+  transform: translateY(-4px) scale(1.04);
+  box-shadow: 0 8px 18px rgba(16, 185, 129, 0.22);
+}
+
+.relative-card.playing {
+  border-color: #10B981 !important;
+  background: #F0FDF4 !important;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.35) !important;
+  transform: scale(1.06);
+}
+
+.relative-card.is-me {
+  border-color: #F59E0B;
+  background: #FFFBEB;
+  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.25);
+}
+
+.relative-card.is-me .relative-relation-pill {
+  background: #F59E0B;
+  color: white;
+}
+
+.relative-avatar {
+  font-size: 2.2rem;
+  line-height: 1;
+  margin-bottom: 0.3rem;
+}
+
+.relative-hanzi {
+  font-size: 1.35rem;
+  font-weight: 900;
+  color: var(--text-dark);
+  line-height: 1.1;
+}
+
+.relative-pinyin {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #10B981;
+  margin-bottom: 0.2rem;
+}
+
+.relative-english {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  line-height: 1.15;
+  margin-bottom: 0.4rem;
+}
+
+.relative-relation-pill {
+  font-size: 0.68rem;
+  font-weight: 800;
+  background: #E2E8F0;
+  color: #475569;
+  padding: 0.15rem 0.45rem;
+  border-radius: 12px;
+  white-space: nowrap;
+}
+
+.relative-sound-icon {
+  position: absolute;
+  top: 0.4rem;
+  right: 0.4rem;
+  font-size: 0.75rem;
+  opacity: 0.6;
+}
+
+/* Guide Comparison Cards */
+.guide-comparison-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  max-width: 800px;
+  margin: 0 auto 2rem;
+}
+
+.guide-box {
+  background: white;
+  border: 2px solid #E2E8F0;
+  border-radius: var(--radius-lg);
+  padding: 1.25rem;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+}
+
+.guide-box-header {
+  margin-bottom: 0.85rem;
+}
+
+.guide-box-title {
+  font-size: 1.2rem;
+  font-weight: 900;
+  color: #1E293B;
+}
+
+.guide-box-desc {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.guide-points-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.6rem;
+}
+
+.guide-point-card {
+  background: #F8FAFC;
+  border: 1.5px solid #E2E8F0;
+  border-radius: var(--radius-md);
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.guide-point-label {
+  font-size: 1.05rem;
+  font-weight: 900;
+  color: #059669;
+}
+
+.guide-point-meaning {
+  font-size: 0.82rem;
+  color: #475569;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+/* Special Edition Level Card Banner in Level Grid */
+.special-level-card {
+  grid-column: 1 / -1;
+  background: linear-gradient(135deg, #059669 0%, #10B981 100%) !important;
+  border: 3px solid #34D399 !important;
+  color: white !important;
+  box-shadow: 0 8px 24px rgba(16, 185, 129, 0.35) !important;
+}
+
+.special-level-card .level-card-name,
+.special-level-card .level-card-desc,
+.special-level-card .level-words-count,
+.special-level-card .level-badge-tag {
+  color: white !important;
+}
+
+.special-level-card .level-badge-tag {
+  background: rgba(255,255,255,0.25) !important;
+}
+
+.btn-open-family-tree {
+  margin-top: 0.75rem;
+  background: white;
+  color: #059669;
+  border: none;
+  font-weight: 900;
+  font-size: 0.95rem;
+  padding: 0.6rem 1.25rem;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: transform 0.2s, box-shadow 0.2s;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.btn-open-family-tree:hover {
+  transform: translateY(-2px) scale(1.03);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.22);
+}
+
 /* Responsive */
 @media (max-width: 480px) {
   .app-title { font-size: 1.8rem; }
@@ -2032,4 +2347,8 @@ body {
   .mascot-speech { display: none; }
   .tianzige-box, #write-canvas { width: 280px; height: 280px; }
   .tianzige-watermark { font-size: 11rem; }
+  .relative-card { min-width: 90px; padding: 0.6rem 0.4rem; }
+  .relative-avatar { font-size: 1.8rem; }
+  .relative-hanzi { font-size: 1.15rem; }
 }
+

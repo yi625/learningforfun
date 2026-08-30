@@ -758,7 +758,31 @@ const App = (() => {
     '一心一意': ['一心一意', 'yixinyiyi', 'yī xīn yī yì', '专心', '一心'],
     '助人为乐': ['助人为乐', 'zhurenweile', 'zhù rén wéi lè', '助人', '热心'],
     '井井有条': ['井井有条', 'jingjingyoutiao', 'jǐng jǐng yǒu tiáo', '整齐', '有条理'],
-    '自强不息': ['自强不息', 'ziqiangbuxi', 'zì qiáng bù xī', '努力', '自强']
+    '自强不息': ['自强不息', 'ziqiangbuxi', 'zì qiáng bù xī', '努力', '自强'],
+
+    // Special Edition: Family Tree & Relatives
+    '爷爷': ['爷爷', 'yeye', 'yé ye', 'grandfather', 'grandpa', '爷', '阿爷', '祖父'],
+    '奶奶': ['奶奶', 'nainai', 'nǎi nai', 'grandmother', 'grandma', '奶', '阿奶', '祖母'],
+    '外公': ['外公', 'waigong', 'wài gōng', 'grandfather', 'grandpa', '公公', '姥爷', '外祖父'],
+    '外婆': ['外婆', 'waipo', 'wài pó', 'grandmother', 'grandma', '婆婆', '姥姥', '外祖母'],
+    '大伯': ['大伯', 'dabo', 'dà bó', 'uncle', '伯伯', '大爷', '伯父'],
+    '叔叔': ['叔叔', 'shushu', 'shū shu', 'uncle', '叔', '小叔', '叔父'],
+    '舅舅': ['舅舅', 'jiujiu', 'jiù jiu', 'uncle', '舅', '大舅', '小舅', '舅父'],
+    '姑姑': ['姑姑', 'gugu', 'gū gu', 'aunt', '姑', '大姑', '小姑', '姑妈', '姑母'],
+    '阿姨': ['阿姨', 'ayi', 'ā yí', 'aunt', '姨', '大姨', '小姨', '姨妈', '姨母'],
+    '伯母': ['伯母', 'bomu', 'bó mǔ', 'aunt', '大娘', '大妈'],
+    '婶婶': ['婶婶', 'shenshen', 'shěn shen', 'aunt', '婶', '小婶', '婶母'],
+    '舅妈': ['舅妈', 'jiuma', 'jiù mā', 'aunt', '舅母', '大舅妈'],
+    '姑丈': ['姑丈', 'guzhang', 'gū zhàng', 'uncle', '姑父', '姑爷'],
+    '姨丈': ['姨丈', 'yizhang', 'yí zhàng', 'uncle', '姨夫', '姨父'],
+    '堂哥': ['堂哥', 'tangge', 'táng gē', 'cousin', '堂兄'],
+    '堂姐': ['堂姐', 'tangjie', 'táng jiě', 'cousin'],
+    '堂弟': ['堂弟', 'tangdi', 'táng dì', 'cousin'],
+    '堂妹': ['堂妹', 'tangmei', 'táng mèi', 'cousin'],
+    '表哥': ['表哥', 'biaoge', 'biǎo gē', 'cousin', '表兄'],
+    '表姐': ['表姐', 'biaojie', 'biǎo jiě', 'cousin'],
+    '表弟': ['表弟', 'biaodi', 'biǎo dì', 'cousin'],
+    '表妹': ['表妹', 'biaomei', 'biǎo mèi', 'cousin']
   };
 
   function normalizeTonePinyin(str) {
@@ -1061,9 +1085,13 @@ const App = (() => {
     grid.innerHTML = '';
 
     LEVELS.forEach(level => {
-      const prog = state.progress[level.id] || { bestScore: 0, completed: false, unlocked: level.id === 1 };
+      const isSpecial = !!level.isSpecial;
+      const prog = isSpecial
+        ? { bestScore: (state.progress[level.id] && state.progress[level.id].bestScore) || 0, completed: false, unlocked: true }
+        : (state.progress[level.id] || { bestScore: 0, completed: false, unlocked: level.id === 1 });
+
       const card = document.createElement('div');
-      card.className = `level-card ${prog.unlocked ? '' : 'locked'}`;
+      card.className = `level-card ${isSpecial ? 'special-level-card' : ''} ${prog.unlocked ? '' : 'locked'}`;
       card.style.setProperty('--level-color', level.color);
 
       let starsHtml = '☆☆☆';
@@ -1071,23 +1099,38 @@ const App = (() => {
       else if (prog.bestScore >= 90) starsHtml = '⭐⭐☆';
       else if (prog.bestScore >= 80) starsHtml = '⭐☆☆';
 
+      const specialTreeButton = isSpecial ? `
+        <div style="margin-top: 0.6rem;">
+          <button type="button" class="btn-open-family-tree" id="btn-quick-family-tree">
+            🌳 打开亲戚称谓树 (Explore Family Tree) ➔
+          </button>
+        </div>
+      ` : '';
+
       card.innerHTML = `
         <div class="level-card-header">
           <div class="level-card-icon">${level.icon}</div>
           <div>
             <span class="level-badge-tag">${level.grade}</span>
-            <h3 class="level-card-name">${prog.unlocked ? '' : '🔒 '}第 ${level.id} 关: ${level.name}</h3>
+            <h3 class="level-card-name">${prog.unlocked ? '' : '🔒 '}${isSpecial ? '特别篇: ' : `第 ${level.id} 关: `}${level.name}</h3>
           </div>
         </div>
         <p class="level-card-desc">${level.description}</p>
-        <div class="level-card-footer">
+        ${specialTreeButton}
+        <div class="level-card-footer" style="margin-top: 0.6rem;">
           <span class="level-words-count">📚 ${level.vocabulary.length} 个词汇 (${level.vocabulary.length} Words)</span>
           <span class="level-stars-display">${starsHtml}</span>
         </div>
       `;
 
       if (prog.unlocked) {
-        card.addEventListener('click', () => {
+        card.addEventListener('click', (e) => {
+          if (e.target.closest('#btn-quick-family-tree')) {
+            e.stopPropagation();
+            SoundEffects.playBubble();
+            startFamilyTreeMode();
+            return;
+          }
           SoundEffects.playBubble();
           selectLevel(level);
         });
@@ -1097,6 +1140,125 @@ const App = (() => {
     });
 
     showView('levels');
+  }
+
+  // ---- View 8: Special Edition Family Tree Explorer ----
+  let currentTreeTab = 'paternal';
+
+  function startFamilyTreeMode() {
+    currentTreeTab = 'paternal';
+    showView('family-tree');
+    renderFamilyTree();
+  }
+
+  function renderFamilyTree() {
+    const tabs = document.querySelectorAll('.tree-tab-btn');
+    tabs.forEach(btn => {
+      if (btn.getAttribute('data-tab') === currentTreeTab) {
+        btn.classList.add('active');
+      } else {
+        btn.classList.remove('active');
+      }
+    });
+
+    const container = document.getElementById('tree-tab-content');
+    if (!container) return;
+
+    if (currentTreeTab === 'guide') {
+      renderFamilyTreeGuide(container);
+      return;
+    }
+
+    const sideData = FAMILY_TREE_DATA[currentTreeTab];
+    if (!sideData) return;
+
+    let html = `
+      <div class="tree-diagram-container">
+        <!-- Tier 1: Grandparents (祖辈) -->
+        <div class="tree-tier-title">👑 祖辈 (Grandparents)</div>
+        <div class="tree-tier grandparents">
+          ${sideData.grandparents.map(person => renderRelativeCard(person)).join('')}
+        </div>
+
+        <div class="tree-connector"></div>
+
+        <!-- Tier 2: Parents & Uncles / Aunts (父辈 / 叔伯姑舅姨) -->
+        <div class="tree-tier-title">👨‍👩‍👧‍👦 父辈 / 叔伯姑姨 (Parents, Uncles & Aunts)</div>
+        <div class="tree-tier parents-uncles">
+          ${sideData.parentsAndUncles.map(person => renderRelativeCard(person)).join('')}
+        </div>
+
+        <div class="tree-connector"></div>
+
+        <!-- Tier 3: Cousins & Me (同辈 / 堂表兄弟姐妹) -->
+        <div class="tree-tier-title">👶 同辈与堂表亲 (Me, Siblings & Cousins)</div>
+        <div class="tree-tier cousins">
+          ${sideData.cousins.map(person => renderRelativeCard(person)).join('')}
+        </div>
+      </div>
+    `;
+
+    container.innerHTML = html;
+
+    // Attach card audio click listeners
+    container.querySelectorAll('.relative-card').forEach(card => {
+      card.addEventListener('click', () => {
+        const hanzi = card.getAttribute('data-hanzi');
+        if (hanzi && hanzi !== '我') {
+          SoundEffects.playPop();
+          card.classList.add('playing');
+          speak(hanzi);
+          setTimeout(() => card.classList.remove('playing'), 1200);
+        } else if (hanzi === '我') {
+          SoundEffects.playVictory();
+          speakDynamic(`${state.userName || '我'}是华语小天才！`);
+        }
+      });
+    });
+  }
+
+  function renderRelativeCard(person) {
+    const isMe = person.hanzi === '我';
+    const avatar = isMe ? (state.userAvatar || '🧒') : person.emoji;
+    const nameDisplay = isMe ? (state.userName || '我') : person.hanzi;
+
+    return `
+      <div class="relative-card ${isMe ? 'is-me' : ''}" data-hanzi="${person.hanzi}" title="点击听发音 (Click to listen)">
+        <span class="relative-sound-icon">🔊</span>
+        <div class="relative-avatar">${avatar}</div>
+        <div class="relative-hanzi">${nameDisplay}</div>
+        <div class="relative-pinyin">${person.pinyin}</div>
+        <div class="relative-english">${person.english}</div>
+        <div class="relative-relation-pill">${person.relation || person.role}</div>
+      </div>
+    `;
+  }
+
+  function renderFamilyTreeGuide(container) {
+    const tips = FAMILY_TREE_DATA.comparisonTips;
+    let html = `<div class="guide-comparison-wrap">`;
+
+    tips.forEach(tip => {
+      html += `
+        <div class="guide-box">
+          <div class="guide-box-header">
+            <div class="guide-box-title">${tip.title}</div>
+            <div class="guide-box-desc">${tip.desc}</div>
+          </div>
+          <div class="guide-points-grid">
+            ${tip.points.map(pt => `
+              <div class="guide-point-card">
+                <span class="guide-point-label">${pt.label}</span>
+                <span class="guide-point-meaning">${pt.meaning}</span>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+    });
+
+    html += `</div>`;
+    container.innerHTML = html;
   }
 
   function selectLevel(level) {
@@ -1501,7 +1663,9 @@ const App = (() => {
     '校': 10, '公': 4, '园': 7, '医': 7, '院': 9, '图': 8, '馆': 11, '超': 12, '市': 5,
     '汽': 7, '车': 4, '巴': 4, '士': 3, '飞': 3, '机': 6, '火': 4, '自': 6, '行': 6,
     '礼': 5, '貌': 14, '诚': 8, '实': 8, '勤': 13, '劳': 7, '团': 6, '结': 9, '爱': 10, '护': 7, '物': 8,
-    '意': 13, '助': 7, '人': 2, '为': 4, '乐': 5, '井': 4, '条': 7, '强': 12, '息': 10
+    '意': 13, '助': 7, '人': 2, '为': 4, '乐': 5, '井': 4, '条': 7, '强': 12, '息': 10,
+    // Family Relatives
+    '爷': 6, '奶': 5, '外': 5, '婆': 11, '伯': 7, '叔': 8, '舅': 13, '姑': 8, '阿': 7, '姨': 9, '母': 5, '婶': 11, '丈': 3, '堂': 11, '表': 8
   };
 
   // ---- Advanced AI Handwriting Verification Engine for Quad Boxes ----
@@ -2427,6 +2591,23 @@ const App = (() => {
     // Back buttons
     document.querySelectorAll('.back-to-levels').forEach(btn => btn.addEventListener('click', goToLevels));
     document.querySelectorAll('.back-to-modes').forEach(btn => btn.addEventListener('click', goToModes));
+
+    // Family Tree Tab Buttons
+    document.querySelectorAll('.tree-tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        SoundEffects.playBubble();
+        const tab = btn.getAttribute('data-tab');
+        if (tab) {
+          currentTreeTab = tab;
+          renderFamilyTree();
+        }
+      });
+    });
+
+    const familyTreeBackBtn = document.getElementById('family-tree-back-btn');
+    if (familyTreeBackBtn) {
+      familyTreeBackBtn.addEventListener('click', goToLevels);
+    }
 
     // Keyboard support for flashcards
     document.addEventListener('keydown', (e) => {

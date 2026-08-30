@@ -159,5 +159,121 @@ const LEVELS = [
       { hanzi: "井井有条", pinyin: "jǐng jǐng yǒu tiáo", english: "Neat and Tidy", emoji: "🗂️", category: "成语 Idiom", type: "phrase" },
       { hanzi: "自强不息", pinyin: "zì qiáng bù xī", english: "Strive Constantly for Success", emoji: "🌟", category: "成语 Idiom", type: "phrase" }
     ]
+  },
+  {
+    id: 5,
+    isSpecial: true,
+    grade: "🌟 特别篇 (Special Edition)",
+    name: "家族亲戚树 (Family Tree & Relatives)",
+    titleEn: "Chinese Family Tree & Relatives",
+    description: "Learn all Uncles, Aunts, Grandparents & Cousins (爷爷、奶奶、外公、外婆、大伯、叔叔、舅舅、姑姑、阿姨、堂表兄弟姐妹) 🌳",
+    icon: "🌳",
+    color: "#10B981",
+    bgGradient: "linear-gradient(135deg, #059669 0%, #34D399 100%)",
+    requiredScore: 80,
+    vocabulary: [
+      { hanzi: "爷爷", pinyin: "yé ye", english: "Grandfather (Dad's Father)", emoji: "👴", category: "父系 Paternal", type: "word" },
+      { hanzi: "奶奶", pinyin: "nǎi nai", english: "Grandmother (Dad's Mother)", emoji: "👵", category: "父系 Paternal", type: "word" },
+      { hanzi: "外公", pinyin: "wài gōng", english: "Grandfather (Mom's Father)", emoji: "👴", category: "母系 Maternal", type: "word" },
+      { hanzi: "外婆", pinyin: "wài pó", english: "Grandmother (Mom's Mother)", emoji: "👵", category: "母系 Maternal", type: "word" },
+      { hanzi: "大伯", pinyin: "dà bó", english: "Uncle (Dad's Elder Brother)", emoji: "👨‍🦰", category: "叔伯 Uncles", type: "word" },
+      { hanzi: "叔叔", pinyin: "shū shu", english: "Uncle (Dad's Younger Brother)", emoji: "👨‍🦱", category: "叔伯 Uncles", type: "word" },
+      { hanzi: "舅舅", pinyin: "jiù jiu", english: "Uncle (Mom's Brother)", emoji: "👨", category: "叔伯 Uncles", type: "word" },
+      { hanzi: "姑姑", pinyin: "gū gu", english: "Aunt (Dad's Sister)", emoji: "👩‍🦰", category: "姑姨 Aunts", type: "word" },
+      { hanzi: "阿姨", pinyin: "ā yí", english: "Aunt (Mom's Sister)", emoji: "👩", category: "姑姨 Aunts", type: "word" },
+      { hanzi: "伯母", pinyin: "bó mǔ", english: "Aunt (Elder Uncle's Wife)", emoji: "👩‍🦱", category: "姑姨 Aunts", type: "word" },
+      { hanzi: "婶婶", pinyin: "shěn shen", english: "Aunt (Younger Uncle's Wife)", emoji: "👩", category: "姑姨 Aunts", type: "word" },
+      { hanzi: "舅妈", pinyin: "jiù mā", english: "Aunt (Mom's Brother's Wife)", emoji: "👩", category: "姑姨 Aunts", type: "word" },
+      { hanzi: "姑丈", pinyin: "gū zhàng", english: "Uncle (Aunt's Husband)", emoji: "👨", category: "叔伯 Uncles", type: "word" },
+      { hanzi: "姨丈", pinyin: "yí zhàng", english: "Uncle (Mom's Sister's Husband)", emoji: "👨‍🦱", category: "叔伯 Uncles", type: "word" },
+      { hanzi: "堂哥", pinyin: "táng gē", english: "Cousin (Dad's Bro's Elder Son)", emoji: "👦", category: "堂亲 Paternal Cousins", type: "word" },
+      { hanzi: "堂姐", pinyin: "táng jiě", english: "Cousin (Dad's Bro's Elder Daughter)", emoji: "👧", category: "堂亲 Paternal Cousins", type: "word" },
+      { hanzi: "堂弟", pinyin: "táng dì", english: "Cousin (Dad's Bro's Younger Son)", emoji: "👦", category: "堂亲 Paternal Cousins", type: "word" },
+      { hanzi: "堂妹", pinyin: "táng mèi", english: "Cousin (Dad's Bro's Younger Daughter)", emoji: "👧", category: "堂亲 Paternal Cousins", type: "word" },
+      { hanzi: "表哥", pinyin: "biǎo gē", english: "Cousin (Maternal / Cross-line Elder Son)", emoji: "👦", category: "表亲 Cross Cousins", type: "word" },
+      { hanzi: "表姐", pinyin: "biǎo jiě", english: "Cousin (Maternal / Cross-line Elder Daughter)", emoji: "👧", category: "表亲 Cross Cousins", type: "word" },
+      { hanzi: "表弟", pinyin: "biǎo dì", english: "Cousin (Maternal / Cross-line Younger Son)", emoji: "👦", category: "表亲 Cross Cousins", type: "word" },
+      { hanzi: "表妹", pinyin: "biǎo mèi", english: "Cousin (Maternal / Cross-line Younger Daughter)", emoji: "👧", category: "表亲 Cross Cousins", type: "word" }
+    ]
   }
 ];
+
+// ---- Visual Interactive Family Tree Structure ----
+const FAMILY_TREE_DATA = {
+  paternal: {
+    id: "paternal",
+    title: "爸爸这一边 (Father's Side / 堂亲)",
+    desc: "从爸爸这边的爷爷、奶奶，到大伯、叔叔、姑姑与堂兄弟姐妹",
+    badge: "👴 爸爸家 (Paternal)",
+    grandparents: [
+      { id: 'yeye', hanzi: '爷爷', pinyin: 'yé ye', english: "Grandfather (Dad's Dad)", emoji: '👴', role: '祖父', relation: '爸爸的爸爸' },
+      { id: 'nainai', hanzi: '奶奶', pinyin: 'nǎi nai', english: "Grandmother (Dad's Mom)", emoji: '👵', role: '祖母', relation: '爸爸的妈妈' }
+    ],
+    parentsAndUncles: [
+      { id: 'dabo', hanzi: '大伯', pinyin: 'dà bó', english: "Uncle (Dad's Elder Brother)", emoji: '👨‍🦰', role: '伯父', relation: '爸爸的哥哥' },
+      { id: 'bomu', hanzi: '伯母', pinyin: 'bó mǔ', english: "Aunt (Elder Uncle's Wife)", emoji: '👩‍🦱', role: '伯母', relation: '大伯的妻子' },
+      { id: 'baba', hanzi: '爸爸', pinyin: 'bà ba', english: "Father / Dad", emoji: '👨', role: '父亲', relation: '我的爸爸' },
+      { id: 'shushu', hanzi: '叔叔', pinyin: 'shū shu', english: "Uncle (Dad's Younger Brother)", emoji: '👨‍🦱', role: '叔父', relation: '爸爸的弟弟' },
+      { id: 'shenshen', hanzi: '婶婶', pinyin: 'shěn shen', english: "Aunt (Younger Uncle's Wife)", emoji: '👩', role: '婶母', relation: '叔叔的妻子' },
+      { id: 'gugu', hanzi: '姑姑', pinyin: 'gū gu', english: "Aunt (Dad's Sister)", emoji: '👩‍🦰', role: '姑母', relation: '爸爸的姐妹' },
+      { id: 'guzhang', hanzi: '姑丈', pinyin: 'gū zhàng', english: "Uncle (Aunt's Husband)", emoji: '👨', role: '姑父', relation: '姑姑的丈夫' }
+    ],
+    cousins: [
+      { id: 'tangge', hanzi: '堂哥', pinyin: 'táng gē', english: "Cousin (Dad's Bro's Elder Son)", emoji: '👦', role: '堂兄', relation: '大伯/叔叔的儿子 (比我大)' },
+      { id: 'tangjie', hanzi: '堂姐', pinyin: 'táng jiě', english: "Cousin (Dad's Bro's Elder Daughter)", emoji: '👧', role: '堂姐', relation: '大伯/叔叔的女儿 (比我大)' },
+      { id: 'me_p', hanzi: '我', pinyin: 'wǒ', english: "Me (Self)", emoji: '🧒', role: '自己', relation: '华语小天才 🌟' },
+      { id: 'tangdi', hanzi: '堂弟', pinyin: 'táng dì', english: "Cousin (Dad's Bro's Younger Son)", emoji: '👦', role: '堂弟', relation: '大伯/叔叔的儿子 (比我小)' },
+      { id: 'tangmei', hanzi: '堂妹', pinyin: 'táng mèi', english: "Cousin (Dad's Bro's Younger Daughter)", emoji: '👧', role: '堂妹', relation: '大伯/叔叔的女儿 (比我小)' },
+      { id: 'biaoge_p', hanzi: '表哥', pinyin: 'biǎo gē', english: "Cousin (Dad's Sister's Elder Son)", emoji: '👦', role: '表兄', relation: '姑姑的儿子 (比我大)' },
+      { id: 'biaomei_p', hanzi: '表妹', pinyin: 'biǎo mèi', english: "Cousin (Dad's Sister's Younger Daughter)", emoji: '👧', role: '表妹', relation: '姑姑的女儿 (比我小)' }
+    ]
+  },
+  maternal: {
+    id: "maternal",
+    title: "妈妈这一边 (Mother's Side / 表亲)",
+    desc: "从妈妈这边的外公、外婆，到舅舅、阿姨与表兄弟姐妹",
+    badge: "👵 妈妈家 (Maternal)",
+    grandparents: [
+      { id: 'waigong', hanzi: '外公', pinyin: 'wài gōng', english: "Grandfather (Mom's Dad)", emoji: '👴', role: '外祖父', relation: '妈妈的爸爸' },
+      { id: 'waipo', hanzi: '外婆', pinyin: 'wài pó', english: "Grandmother (Mom's Mom)", emoji: '👵', role: '外祖母', relation: '妈妈的妈妈' }
+    ],
+    parentsAndUncles: [
+      { id: 'jiujiu', hanzi: '舅舅', pinyin: 'jiù jiu', english: "Uncle (Mom's Brother)", emoji: '👨', role: '舅父', relation: '妈妈的兄弟' },
+      { id: 'jiuma', hanzi: '舅妈', pinyin: 'jiù mā', english: "Aunt (Mom's Brother's Wife)", emoji: '👩', role: '舅母', relation: '舅舅的妻子' },
+      { id: 'mama', hanzi: '妈妈', pinyin: 'mā ma', english: "Mother / Mom", emoji: '👩', role: '母亲', relation: '我的妈妈' },
+      { id: 'ayi', hanzi: '阿姨', pinyin: 'ā yí', english: "Aunt (Mom's Sister)", emoji: '👩‍🦰', role: '姨母', relation: '妈妈的姐妹' },
+      { id: 'yizhang', hanzi: '姨丈', pinyin: 'yí zhàng', english: "Uncle (Mom's Sister's Husband)", emoji: '👨‍🦱', role: '姨父', relation: '阿姨的丈夫' }
+    ],
+    cousins: [
+      { id: 'biaoge_m', hanzi: '表哥', pinyin: 'biǎo gē', english: "Cousin (Mom's Sibling's Elder Son)", emoji: '👦', role: '表兄', relation: '舅舅/阿姨的儿子 (比我大)' },
+      { id: 'biaojie_m', hanzi: '表姐', pinyin: 'biǎo jiě', english: "Cousin (Mom's Sibling's Elder Daughter)", emoji: '👧', role: '表姐', relation: '舅舅/阿姨的女儿 (比我大)' },
+      { id: 'me_m', hanzi: '我', pinyin: 'wǒ', english: "Me (Self)", emoji: '🧒', role: '自己', relation: '华语小天才 🌟' },
+      { id: 'biaodi_m', hanzi: '表弟', pinyin: 'biǎo dì', english: "Cousin (Mom's Sibling's Younger Son)", emoji: '👦', role: '表弟', relation: '舅舅/阿姨的儿子 (比我小)' },
+      { id: 'biaomei_m', hanzi: '表妹', pinyin: 'biǎo mèi', english: "Cousin (Mom's Sibling's Younger Daughter)", emoji: '👧', role: '表妹', relation: '舅舅/阿姨的女儿 (比我小)' }
+    ]
+  },
+  comparisonTips: [
+    {
+      title: "💡 为什么英文叫 Uncle，华语分这么细？",
+      enTitle: "Why English has 1 'Uncle' but Chinese has many?",
+      desc: "英文里的 Uncle 在华语里有精确的称呼：",
+      points: [
+        { label: "大伯 (dà bó)", meaning: "爸爸的哥哥 (Dad's elder brother)" },
+        { label: "叔叔 (shū shu)", meaning: "爸爸的弟弟 (Dad's younger brother)" },
+        { label: "舅舅 (jiù jiu)", meaning: "妈妈的兄弟 (Mom's brother)" },
+        { label: "姑丈 (gū zhàng)", meaning: "姑姑的丈夫 (Dad's sister's husband)" },
+        { label: "姨丈 (yí zhàng)", meaning: "阿姨的丈夫 (Mom's sister's husband)" }
+      ]
+    },
+    {
+      title: "💡 堂兄弟姐妹 (Táng) vs 表兄弟姐妹 (Biǎo)",
+      enTitle: "Cousin Difference: Tang vs Biao",
+      desc: "同样是 Cousin，华语分‘堂’和‘表’：",
+      points: [
+        { label: "堂 (Táng)", meaning: "同姓氏！爸爸的兄弟（伯伯、叔叔）的孩子叫【堂哥、堂姐、堂弟、堂妹】" },
+        { label: "表 (Biǎo)", meaning: "不同姓氏！姑姑、舅舅、阿姨的孩子都叫【表哥、表姐、表弟、表妹】" }
+      ]
+    }
+  ]
+};
+
