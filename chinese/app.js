@@ -500,6 +500,7 @@ const App = (() => {
 
     const profiles = getProfilesDirectory();
     const profileIds = Object.keys(profiles);
+    const deleteFormBtn = document.getElementById('btn-delete-profile-form');
 
     // If viewMode is 'edit', open edit form directly
     if (viewMode === 'edit' || profileIds.length === 0) {
@@ -510,6 +511,14 @@ const App = (() => {
       if (nameInput) nameInput.value = state.userName || '';
       if (formTitle) {
         formTitle.textContent = state.profileId ? `✏️ 编辑 ${state.userName} 的档案 (Edit Profile)` : '➕ 添加新学生档案 (Add New Kid)';
+      }
+
+      if (deleteFormBtn) {
+        if (state.profileId && profiles[state.profileId]) {
+          deleteFormBtn.classList.remove('hidden');
+        } else {
+          deleteFormBtn.classList.add('hidden');
+        }
       }
 
       // Highlight current avatar
@@ -553,7 +562,7 @@ const App = (() => {
               </div>
               <div class="profile-kid-actions">
                 <button type="button" class="btn-card-edit" data-edit-id="${p.id}" title="修改形象与名字 (Edit Name/Avatar)">✏️</button>
-                ${profileIds.length > 1 ? `<button type="button" class="btn-card-delete" data-delete-id="${p.id}" title="删除此档案 (Delete Profile)">🗑️</button>` : ''}
+                <button type="button" class="btn-card-delete" data-delete-id="${p.id}" title="删除此档案 (Delete Profile)">🗑️</button>
               </div>
             </div>
           `;
@@ -578,6 +587,7 @@ const App = (() => {
               if (idInput) idInput.value = targetP.id;
               if (nameInput) nameInput.value = targetP.name;
               if (formTitle) formTitle.textContent = `✏️ 编辑 ${targetP.name} 的形象与名字`;
+              if (deleteFormBtn) deleteFormBtn.classList.remove('hidden');
               state.userAvatar = targetP.avatar || '👧';
               document.querySelectorAll('.avatar-choice-btn').forEach(b => {
                 if (b.getAttribute('data-avatar') === state.userAvatar) b.classList.add('active');
@@ -2096,6 +2106,16 @@ const App = (() => {
           showProfileModal('list');
         } else {
           hideProfileModal();
+        }
+      });
+    }
+
+    const btnDeleteProfileForm = document.getElementById('btn-delete-profile-form');
+    if (btnDeleteProfileForm) {
+      btnDeleteProfileForm.addEventListener('click', () => {
+        const idInput = document.getElementById('profile-id-input');
+        if (idInput && idInput.value) {
+          deleteProfile(idInput.value);
         }
       });
     }
