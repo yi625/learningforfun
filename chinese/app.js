@@ -30,7 +30,7 @@ const App = (() => {
     isRecording: false,
     profileId: '',
     userName: '',
-    userAvatar: '👧',
+    userAvatar: '🐼',
     lastMode: 'quiz',
   };
 
@@ -350,7 +350,7 @@ const App = (() => {
     const cleanName = (name || '').trim();
     if (!cleanName) return;
 
-    const chosenAvatar = avatar || state.userAvatar || '👧';
+    const chosenAvatar = avatar || state.userAvatar || '🐼';
     const profiles = getProfilesDirectory();
     const isNew = !profileId || !profiles[profileId];
     const targetId = isNew ? ('kid_' + Date.now()) : profileId;
@@ -411,7 +411,7 @@ const App = (() => {
     if (p) {
       state.profileId = p.id;
       state.userName = p.name;
-      state.userAvatar = p.avatar || '👧';
+      state.userAvatar = p.avatar || '🐼';
       state.progress = p.progress || {};
 
       LEVELS.forEach(level => {
@@ -463,6 +463,7 @@ const App = (() => {
       } else {
         state.profileId = '';
         state.userName = '';
+        state.userAvatar = '🐼';
         state.progress = {};
         showProfileModal('edit');
       }
@@ -474,7 +475,7 @@ const App = (() => {
     const avatarEl = document.getElementById('user-avatar-display');
     const speechEl = document.getElementById('mascot-speech');
     if (avatarEl) {
-      avatarEl.textContent = state.userAvatar || '👧';
+      avatarEl.textContent = state.userAvatar || '🐼';
     }
     if (el) {
       if (state.userName) {
@@ -489,7 +490,7 @@ const App = (() => {
   }
 
   function selectAvatar(avatarChar) {
-    const avatar = avatarChar || '👧';
+    const avatar = avatarChar || '🐼';
     state.userAvatar = avatar;
     const hiddenInput = document.getElementById('selected-avatar-input');
     if (hiddenInput) hiddenInput.value = avatar;
@@ -529,21 +530,25 @@ const App = (() => {
       if (listSection) listSection.style.display = 'none';
       if (formSection) formSection.classList.add('active');
 
-      if (idInput) idInput.value = state.profileId || '';
-      if (nameInput) nameInput.value = state.userName || '';
+      const isEditingExisting = !!(state.profileId && profiles[state.profileId]);
+
+      if (idInput) idInput.value = isEditingExisting ? state.profileId : '';
+      if (nameInput) nameInput.value = isEditingExisting ? state.userName : '';
       if (formTitle) {
-        formTitle.textContent = state.profileId ? `✏️ 编辑 ${state.userName} 的档案 (Edit Profile)` : '➕ 添加新学生档案 (Add New Kid)';
+        formTitle.textContent = isEditingExisting ? `✏️ 编辑 ${state.userName} 的档案 (Edit Profile)` : '➕ 添加新学生档案 (Add New Kid)';
       }
 
       if (deleteFormBtn) {
-        if (state.profileId && profiles[state.profileId]) {
+        if (isEditingExisting) {
           deleteFormBtn.classList.remove('hidden');
         } else {
           deleteFormBtn.classList.add('hidden');
         }
       }
 
-      selectAvatar(state.userAvatar || '👧');
+      // If new profile, CLEAR NAME and default to Panda 🐼
+      const defaultAvatar = isEditingExisting ? (state.userAvatar || '🐼') : '🐼';
+      selectAvatar(defaultAvatar);
       setTimeout(() => nameInput && nameInput.focus(), 100);
     } else {
       // Show list of profiles
