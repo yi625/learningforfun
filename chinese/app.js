@@ -657,52 +657,103 @@ const App = (() => {
     }, 150);
   }
 
-  // Comprehensive Single-Word Homophone & Phonetic Map for Kids
+  // ---- Comprehensive Chinese Homophone & Phonetic Map for All Words ----
   const CHINESE_HOMOPHONES = {
-    '少': ['少', '烧', '稍', '勺', '绍', '哨', '稍后', '多少', '减少', 'shao', 'show', 'shall'],
-    '多': ['多', '朵', '躲', '夺', '堕', '多久', '多少', 'duo', 'door'],
-    '大': ['大', '达', '打', '搭', '答', '哒', '大人', '大家', 'da', 'big'],
-    '小': ['小', '消', '销', '笑', '效', '校', '晓', '小孩', 'xiao', 'small'],
-    '高': ['高', '搞', '告', '稿', '膏', '糕', '个子高', 'gao', 'tall'],
-    '矮': ['矮', '哎', '爱', '哀', '埃', '挨', '矮小', 'ai', 'eye', 'short'],
-    '快': ['快', '块', '筷', '会', '快速', 'kuai', 'fast'],
-    '慢': ['慢', '满', '曼', '漫', '慢慢', 'man', 'slow'],
-    '冷': ['冷', '愣', 'leng', 'cold'],
-    '热': ['热', '惹', 're', 'hot'],
-    '晴': ['晴', '情', '请', '清', 'qing', 'sunny'],
-    '雨': ['雨', '语', '与', '羽', '下雨', 'yu', 'rain'],
-    '风': ['风', '封', '丰', '刮风', 'feng', 'wind'],
-    '雪': ['雪', '学', '血', '下雪', 'xue', 'snow'],
-    '跑': ['跑', '泡', '跑步', 'pao', 'run'],
-    '跳': ['跳', '条', '跳绳', 'tiao', 'jump'],
-    '游': ['游', '由', '游泳', 'you', 'swim'],
-    '书': ['书', '树', '叔', '看书', 'shu', 'book'],
-    '笔': ['笔', '比', '币', '铅笔', 'bi', 'pen'],
-    '本': ['本', '笨', '课本', 'ben', 'book'],
-    '尺': ['尺', '吃', '齿', '尺子', 'chi', 'ruler'],
-    '读': ['读', '独', '毒', '度', '读书', 'du', 'read'],
-    '写': ['写', '鞋', '谢', '邪', '写字', 'xie', 'write'],
-    '吃': ['吃', '痴', '池', '吃饭', 'chi', 'eat'],
-    '喝': ['喝', '合', '河', '何', '喝水', 'he', 'drink'],
-    '一': ['一', '1', '依', '衣', '医', '已', '以', '亿', 'yi', 'one'],
-    '二': ['二', '2', '两', '饿', '而', '儿', 'er', 'liang', 'two'],
-    '三': ['三', '3', '山', '伞', '散', 'san', 'three'],
-    '四': ['四', '4', '是', '事', '市', '十', 'si', 'four'],
-    '五': ['五', '5', '屋', '武', '物', '舞', 'wu', 'five'],
-    '六': ['六', '6', '留', '流', '柳', 'liu', 'six'],
-    '七': ['七', '7', '期', '妻', '齐', '起', '气', 'qi', 'seven'],
-    '八': ['八', '8', '吧', '爸', '巴', '把', '拔', 'ba', 'eight'],
-    '九': ['九', '9', '酒', '久', '就', '救', 'jiu', 'nine'],
-    '十': ['十', '10', '石', '拾', '实', '识', '时', 'shi', 'ten'],
-    '猫': ['猫', '毛', '冒', '帽', '小猫', 'mao', 'cat'],
-    '狗': ['狗', '够', '购', '勾', '小狗', 'gou', 'go', 'dog'],
-    '鸟': ['鸟', '袅', '小鸟', 'niao', 'bird'],
-    '鱼': ['鱼', '于', '余', '小鱼', 'yu', 'fish'],
-    '爸': ['爸', '八', '吧', '爸爸', 'ba', 'baba', 'dad'],
-    '妈': ['妈', '麻', '马', '妈妈', 'ma', 'mama', 'mom'],
-    '红': ['红', '洪', '鸿', '宏', '红色', 'hong', 'red'],
-    '蓝': ['蓝', '兰', '篮', '蓝色', 'lan', 'blue'],
-    '黄': ['黄', '皇', '黄色', 'huang', 'yellow']
+    // Level 1: Numbers & Basics
+    '一': ['一', '1', '11', 'yi', 'yī', 'one', '依', '衣', '医', '已', '以', '亿', '幺', '壹'],
+    '二': ['二', '2', '22', 'er', 'èr', 'two', '两', '贰', '儿', '耳', '饿', '而', '俩'],
+    '三': ['三', '3', '33', 'san', 'sān', 'three', '叁', '山', '伞', '散', '珊', '杉'],
+    '四': ['四', '4', '44', 'si', 'sì', 'four', '肆', '是', '事', '市', '十', '视', '死', '试', '寺'],
+    '五': ['五', '5', '55', 'wu', 'wǔ', 'five', '伍', '屋', '武', '物', '舞', '无', '午', '捂'],
+    '六': ['六', '6', '66', '666', 'liu', 'liù', 'six', '陆', '留', '流', '柳', '溜', '路', '楼', '露'],
+    '七': ['七', '7', '77', 'qi', 'qī', 'seven', '柒', '期', '妻', '齐', '起', '气', '奇', '漆', '旗'],
+    '八': ['八', '8', '88', 'ba', 'bā', 'eight', '捌', '吧', '爸', '巴', '把', '拔', '发', '罢'],
+    '九': ['九', '9', '99', 'jiu', 'jiǔ', 'nine', '玖', '酒', '久', '就', '救', '旧', '纠', '舅'],
+    '十': ['十', '10', '1010', 'shi', 'shí', 'ten', '拾', '石', '实', '识', '时', '事', '是', '师', '食'],
+    '手': ['手', 'shou', 'shǒu', 'hand', '首', '守', '寿', '授', '受', '收', '兽', '小手', '手手', '一只手'],
+    '眼睛': ['眼睛', 'yanjing', 'yǎnjing', 'eyes', 'eye', '眼', '睛', '小眼', '大眼', 'yan', 'jing', '双眼'],
+    '猫': ['猫', 'mao', 'māo', 'cat', '小猫', '毛', '帽', '冒', '喵', '猫猫', '一只猫'],
+    '狗': ['狗', 'gou', 'gǒu', 'dog', '小狗', '够', '购', '勾', '狗狗', '一只狗'],
+    '鸟': ['鸟', 'niao', 'niǎo', 'bird', '小鸟', '袅', '鸟儿', '鸟鸟', '一只鸟'],
+    '爸爸': ['爸爸', 'baba', 'bà ba', 'dad', 'father', '爸', '阿爸', '老爸', '八八'],
+    '妈妈': ['妈妈', 'mama', 'mā ma', 'mom', 'mother', '妈', '阿妈', '老妈', '麻麻'],
+    '哥哥': ['哥哥', 'gege', 'gē ge', 'brother', '哥', '大哥', '表哥'],
+    '姐姐': ['姐姐', 'jiejie', 'jiě jie', 'sister', '姐', '大姐', '表姐'],
+    '弟弟': ['弟弟', 'didi', 'dì di', 'brother', '弟', '小弟', '表弟'],
+    '妹妹': ['妹妹', 'meimei', 'mèi mei', 'sister', '妹', '小妹', '表妹'],
+    '红色': ['红色', '红', 'hongse', 'hóng sè', 'hong', 'red', '红红', '大红'],
+    '蓝色': ['蓝色', '蓝', 'lanse', 'lán sè', 'lan', 'blue', '蓝蓝', '浅蓝'],
+    '黄色': ['黄色', '黄', 'huangse', 'huáng sè', 'huang', 'yellow', '金黄'],
+    '太阳': ['太阳', 'taiyang', 'tài yáng', 'sun', '阳光', '日头', '太阳公公'],
+    '月亮': ['月亮', 'yueliang', 'yuè liang', 'moon', '月', '月球', '弯月', '明月'],
+
+    // Level 2: School & Life
+    '老师': ['老师', 'laoshi', 'lǎo shī', 'teacher', '师', '老实'],
+    '同学': ['同学', 'tongxue', 'tóng xué', 'classmate', '学', '学友'],
+    '书包': ['书包', 'shubao', 'shū bāo', 'schoolbag', '包', '书袋'],
+    '铅笔': ['铅笔', 'qianbi', 'qiān bǐ', 'pencil', '笔', '木笔'],
+    '尺子': ['尺子', 'chizi', 'chǐ zi', 'ruler', '尺', '直尺'],
+    '橡皮': ['橡皮', 'xiangpi', 'xiàng pí', 'eraser', '皮', '橡皮擦'],
+    '早上好': ['早上好', 'zaoshanghao', 'zǎo shang hǎo', 'good morning', '早安', '早上', '早'],
+    '谢谢': ['谢谢', 'xiexie', 'xiè xie', 'thank you', 'thanks', '谢', '感谢'],
+    '对不起': ['对不起', 'duibuqi', 'duì bu qǐ', 'sorry', '不好意思', '抱歉'],
+    '没关系': ['没关系', 'meiguanxi', 'méi guān xi', 'its okay', '没事', '无所谓', '不用谢'],
+    '再见': ['再见', 'zaijian', 'zài jiàn', 'goodbye', 'bye', '拜拜', '再会'],
+    '读书': ['读书', 'dushu', 'dú shū', 'read book', '读', '看书', '念书'],
+    '写字': ['写字', 'xiezi', 'xiě zì', 'write', '写', '写书法'],
+    '画画': ['画画', 'huahua', 'huà huà', 'draw', 'paint', '画', '画图'],
+    '吃饭': ['吃饭', 'chifan', 'chī fàn', 'eat', '吃', '吃米饭'],
+    '喝水': ['喝水', 'heshui', 'hē shuǐ', 'drink water', '喝', '喝茶'],
+    '苹果': ['苹果', 'pingguo', 'píng guǒ', 'apple', '果', '红苹果'],
+    '香蕉': ['香蕉', 'xiangjiao', 'xiāng jiāo', 'banana', '蕉', '大香蕉'],
+    '西瓜': ['西瓜', 'xigua', 'xī guā', 'watermelon', '瓜', '甜西瓜'],
+    '面包': ['面包', 'mianbao', 'miàn bāo', 'bread', '吐司'],
+    '牛奶': ['牛奶', 'niunai', 'niú nǎi', 'milk', '奶', '鲜奶'],
+
+    // Level 3: Feelings & Opposites
+    '开心': ['开心', 'kaixin', 'kāi xīn', 'happy', '快乐', '高兴'],
+    '伤心': ['伤心', 'shangxin', 'shāng xīn', 'sad', '难过', '哭'],
+    '生气': ['生气', 'shengqi', 'shēng qì', 'angry', '发火', '气'],
+    '害怕': ['害怕', 'haipa', 'hài pà', 'scared', '怕', '恐惧'],
+    '勇敢': ['勇敢', 'yonggan', 'yǒng gǎn', 'brave', '勇', '不害怕'],
+    '晴天': ['晴天', 'qingtian', 'qíng tiān', 'sunny', '晴', '好天气'],
+    '下雨': ['下雨', 'xiayu', 'xià yǔ', 'rain', '雨', '下雨天'],
+    '刮风': ['刮风', 'guafeng', 'guā fēng', 'wind', '风', '大风'],
+    '今天': ['今天', 'jintian', 'jīn tiān', 'today', '今日'],
+    '明天': ['明天', 'mingtian', 'míng tiān', 'tomorrow', '明日'],
+    '大': ['大', 'da', 'dà', 'big', '达', '打', '搭', '答', '哒', '大大', '巨大'],
+    '小': ['小', 'xiao', 'xiǎo', 'small', '消', '销', '笑', '效', '校', '晓', '小小', '微小'],
+    '多': ['多', 'duo', 'duō', 'many', 'much', '朵', '躲', '夺', '堕', '好多'],
+    '少': ['少', 'shao', 'shǎo', 'few', 'little', '烧', '稍', '勺', '绍', '哨', '很少'],
+    '高': ['高', 'gao', 'gāo', 'tall', 'high', '搞', '告', '稿', '膏', '糕', '个子高'],
+    '矮': ['矮', 'ai', 'ǎi', 'short', '哎', '爱', '哀', '埃', '挨', '矮小'],
+    '快': ['快', 'kuai', 'kuài', 'fast', 'quick', '块', '筷', '会', '快速'],
+    '慢': ['慢', 'man', 'màn', 'slow', '满', '曼', '漫', '慢慢', '缓慢'],
+    '唱歌': ['唱歌', 'changge', 'chàng gē', 'sing', '歌', '唱'],
+    '跳舞': ['跳舞', 'tiaowu', 'tiào wǔ', 'dance', '舞', '跳'],
+    '游泳': ['游泳', 'youyong', 'yóu yǒng', 'swim', '游', '游水'],
+    '跑步': ['跑步', 'paobu', 'pǎo bù', 'run', '跑', '快跑'],
+
+    // Level 4: Community & Idioms
+    '学校': ['学校', 'xuexiao', 'xué xiào', 'school', '校'],
+    '公园': ['公园', 'gongyuan', 'gōng yuán', 'park', '园'],
+    '医院': ['医院', 'yiyuan', 'yī yuàn', 'hospital', '医'],
+    '图书馆': ['图书馆', 'tushuguan', 'tú shū guǎn', 'library', '书馆'],
+    '超市': ['超市', 'chaoshi', 'chāo shì', 'supermarket', '市场'],
+    '汽车': ['汽车', 'qiche', 'qì chē', 'car', '车', '小车'],
+    '巴士': ['巴士', 'bashi', 'bā shì', 'bus', '公车', '公交车'],
+    '飞机': ['飞机', 'feiji', 'fēi jī', 'airplane', '机', '客机'],
+    '火车': ['火车', 'huoche', 'huǒ chē', 'train', '铁道', '高铁'],
+    '自行车': ['自行车', 'zixingche', 'zì xíng chē', 'bicycle', '单车', '脚踏车'],
+    '礼貌': ['礼貌', 'limao', 'lǐ mào', 'polite', '有礼貌', '礼'],
+    '诚实': ['诚实', 'chengshi', 'chéng shí', 'honest', '诚', '老实'],
+    '勤劳': ['勤劳', 'qinlao', 'qín láo', 'hardworking', '勤奋', '勤'],
+    '团结': ['团结', 'tuanjie', 'tuán jié', 'united', '齐心'],
+    '爱护公物': ['爱护公物', 'aihugongwu', 'ài hù gōng wù', '公物', '爱护'],
+    '一心一意': ['一心一意', 'yixinyiyi', 'yī xīn yī yì', '专心', '一心'],
+    '助人为乐': ['助人为乐', 'zhurenweile', 'zhù rén wéi lè', '助人', '热心'],
+    '井井有条': ['井井有条', 'jingjingyoutiao', 'jǐng jǐng yǒu tiáo', '整齐', '有条理'],
+    '自强不息': ['自强不息', 'ziqiangbuxi', 'zì qiáng bù xī', '努力', '自强']
   };
 
   function normalizeTonePinyin(str) {
@@ -722,40 +773,59 @@ const App = (() => {
     if (!spoken || !expectedWord) return false;
     const expected = expectedWord.hanzi || expectedWord;
     const pinyinRaw = expectedWord.pinyin || '';
+    const englishRaw = expectedWord.english || '';
+
     const normSpoken = normalizeChinese(spoken);
     const normExpected = normalizeChinese(expected);
     const cleanPinyin = normalizeTonePinyin(pinyinRaw);
     const spokenPinyin = normalizeTonePinyin(spoken);
 
-    // 1. Direct exact or substring match
-    if (normSpoken === normExpected || normSpoken.includes(normExpected) || normExpected.includes(normSpoken)) return true;
+    if (!normSpoken) return false;
 
-    // 2. Single-character homophone table match
+    // 1. Direct exact or substring containment (e.g. "六" in "66" or "手" in "这是手")
+    if (normSpoken === normExpected || normSpoken.includes(normExpected) || normExpected.includes(normSpoken)) {
+      return true;
+    }
+
+    // 2. Number digit-to-word match (e.g. 6 -> 六, 66 -> 六, 1 -> 一, etc.)
+    const numberDigits = { '一':'1', '二':'2', '三':'3', '四':'4', '五':'5', '六':'6', '七':'7', '八':'8', '九':'9', '十':'10' };
+    if (numberDigits[normExpected]) {
+      const digit = numberDigits[normExpected];
+      if (normSpoken.includes(digit) || normSpoken === digit) return true;
+    }
+
+    // 3. Comprehensive homophone & phonetic table match
     if (CHINESE_HOMOPHONES[expected]) {
       const homophones = CHINESE_HOMOPHONES[expected];
       for (const h of homophones) {
         const normH = normalizeChinese(h);
-        if (normSpoken === normH || normSpoken.includes(normH) || normH.includes(normSpoken)) {
+        if (normH && (normSpoken === normH || normSpoken.includes(normH) || normH.includes(normSpoken))) {
           return true;
         }
       }
     }
 
-    // 3. Pinyin phonetic match (with & without tone marks)
-    if (cleanPinyin && (spokenPinyin.includes(cleanPinyin) || cleanPinyin.includes(spokenPinyin))) {
-      return true;
+    // 4. Pinyin phonetic match (with & without tone marks)
+    if (cleanPinyin && spokenPinyin) {
+      if (spokenPinyin === cleanPinyin || spokenPinyin.includes(cleanPinyin) || cleanPinyin.includes(spokenPinyin)) {
+        return true;
+      }
     }
 
-    // 4. Number match
-    const numberMap = { '一':'1', '二':'2', '三':'3', '四':'4', '五':'5', '六':'6', '七':'7', '八':'8', '九':'9', '十':'10' };
-    if (numberMap[normExpected] && (normSpoken.includes(numberMap[normExpected]) || normSpoken === numberMap[normExpected])) {
-      return true;
+    // 5. English keyword match (e.g. child says "hand" for "手" or "six" for "六")
+    if (englishRaw) {
+      const engWords = englishRaw.toLowerCase().split(/[\s,()\/]+/);
+      for (const ew of engWords) {
+        if (ew.length >= 2 && normSpoken.toLowerCase().includes(ew)) {
+          return true;
+        }
+      }
     }
 
     return false;
   }
 
-  // ---- Speech Recognition (Mandarin) ----
+  // ---- Speech Recognition (Mandarin) with Silent Auto-Restart ----
   function initSpeechRecognition() {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
@@ -772,6 +842,14 @@ const App = (() => {
 
   function startListening(targetWord) {
     return new Promise((resolve, reject) => {
+      // Free audio channel before listening
+      if (typeof speechSynthesis !== 'undefined') {
+        try { speechSynthesis.cancel(); } catch(e) {}
+      }
+      if (currentAudio) {
+        try { currentAudio.pause(); } catch(e) {}
+      }
+
       if (!recognition) {
         const ok = initSpeechRecognition();
         if (!ok) { reject('not-supported'); return; }
@@ -779,7 +857,11 @@ const App = (() => {
 
       let settled = false;
       let interimResult = '';
+      const startTime = Date.now();
+      let restartAttempts = 0;
+      const MAX_RESTARTS = 3;
 
+      // Generous 8.5s window so children are never rushed
       const timeoutId = setTimeout(() => {
         if (!settled) {
           settled = true;
@@ -792,9 +874,8 @@ const App = (() => {
             reject('no-speech');
           }
         }
-      }, 8000);
+      }, 8500);
 
-      let autoStopTimer = null;
       recognition.lang = 'zh-CN';
 
       recognition.onresult = (event) => {
@@ -805,7 +886,8 @@ const App = (() => {
         for (let i = event.resultIndex; i < event.results.length; i++) {
           const res = event.results[i];
           for (let j = 0; j < res.length; j++) {
-            allCandidates.push(res[j].transcript.trim());
+            const tr = res[j].transcript.trim();
+            if (tr) allCandidates.push(tr);
           }
           if (res.isFinal) {
             finalTranscript += res[0].transcript.trim();
@@ -818,13 +900,12 @@ const App = (() => {
         if (candidateText) {
           interimResult = candidateText;
 
-          // Instant real-time match for single words & phrases!
+          // INSTANT 1-WORD MATCH CHECK (Matches immediately on first word!)
           if (targetWord) {
             for (const cand of allCandidates) {
               if (chineseMatch(cand, targetWord)) {
                 settled = true;
                 clearTimeout(timeoutId);
-                if (autoStopTimer) clearTimeout(autoStopTimer);
                 try { recognition.stop(); } catch(e) {}
                 state.isRecording = false;
                 updateMicButton();
@@ -833,48 +914,78 @@ const App = (() => {
               }
             }
           }
-
-          if (autoStopTimer) clearTimeout(autoStopTimer);
-          autoStopTimer = setTimeout(() => {
-            if (!settled) {
-              settled = true;
-              clearTimeout(timeoutId);
-              try { recognition.stop(); } catch(e) {}
-              state.isRecording = false;
-              updateMicButton();
-              resolve(allCandidates.length ? allCandidates : [interimResult]);
-            }
-          }, 1200);
         }
 
         if (finalTranscript && !settled) {
           settled = true;
           clearTimeout(timeoutId);
-          if (autoStopTimer) clearTimeout(autoStopTimer);
           try { recognition.stop(); } catch(e) {}
+          state.isRecording = false;
+          updateMicButton();
           resolve(allCandidates.length ? allCandidates : [finalTranscript]);
         }
       };
 
       recognition.onerror = (event) => {
-        if (!settled) {
+        if (settled) return;
+        const err = event.error;
+        const elapsed = Date.now() - startTime;
+
+        // Auto-restart on mobile false silence / early timeout
+        if ((err === 'no-speech' || err === 'aborted') && elapsed < 5500 && restartAttempts < MAX_RESTARTS) {
+          restartAttempts++;
+          setTimeout(() => {
+            if (!settled && state.isRecording) {
+              try { recognition.start(); } catch(e) {}
+            }
+          }, 150);
+          return;
+        }
+
+        if (err === 'not-allowed' || err === 'service-not-allowed') {
           settled = true;
           clearTimeout(timeoutId);
-          if (autoStopTimer) clearTimeout(autoStopTimer);
-          reject(event.error);
+          state.isRecording = false;
+          updateMicButton();
+          reject('permission-denied');
+          return;
+        }
+
+        if (elapsed >= 5500) {
+          settled = true;
+          clearTimeout(timeoutId);
+          state.isRecording = false;
+          updateMicButton();
+          if (interimResult) resolve([interimResult]);
+          else reject(err);
         }
       };
 
       recognition.onend = () => {
-        if (!settled) {
-          settled = true;
-          clearTimeout(timeoutId);
-          if (autoStopTimer) clearTimeout(autoStopTimer);
-          if (interimResult) resolve([interimResult]);
-          else reject('no-speech');
+        if (settled) {
+          state.isRecording = false;
+          updateMicButton();
+          return;
         }
+
+        const elapsed = Date.now() - startTime;
+        // If ended early without speech on mobile, keep listening
+        if (elapsed < 5500 && restartAttempts < MAX_RESTARTS && state.isRecording) {
+          restartAttempts++;
+          setTimeout(() => {
+            if (!settled && state.isRecording) {
+              try { recognition.start(); } catch(e) {}
+            }
+          }, 150);
+          return;
+        }
+
+        settled = true;
+        clearTimeout(timeoutId);
         state.isRecording = false;
         updateMicButton();
+        if (interimResult) resolve([interimResult]);
+        else reject('no-speech');
       };
 
       try {
@@ -891,9 +1002,11 @@ const App = (() => {
           } catch(e3) {
             settled = true;
             clearTimeout(timeoutId);
+            state.isRecording = false;
+            updateMicButton();
             reject('aborted');
           }
-        }, 200);
+        }, 150);
       }
     });
   }
@@ -919,9 +1032,11 @@ const App = (() => {
   }
 
   function normalizeChinese(text) {
+    if (!text) return '';
     return text
+      .toString()
       .replace(/\s+/g, '')
-      .replace(/[，。！？、]/g, '')
+      .replace(/[，。！？、“”‘’（）,.!?:;'"_~`@#$%^&*()-+=/\\|<>[\]{}]/g, '')
       .toLowerCase()
       .trim();
   }
@@ -1748,6 +1863,10 @@ const App = (() => {
     const feedbackEl = document.getElementById('speak-feedback');
     const retryBtn = document.getElementById('speak-retry-btn');
     const nextBtn = document.getElementById('speak-next-btn');
+
+    if (feedbackEl) feedbackEl.classList.add('hidden');
+    if (retryBtn) retryBtn.classList.add('hidden');
+    if (nextBtn) nextBtn.classList.add('hidden');
 
     try {
       const results = await startListening(q.word);
