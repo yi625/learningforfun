@@ -24,7 +24,7 @@ const AUDIO_MANIFEST = {
   "狗": "audio/5090e44ef940.mp3",
   "鸟": "audio/cdd7ce48a936.mp3",
   "眼睛": "audio/946f5c8c6903.mp3",
-  "小手": "audio/b42048337f23.mp3",
+  "手": "audio/3c7d183f1b71.mp3",
   "老师": "audio/295af37e0588.mp3",
   "同学": "audio/1f888438cefe.mp3",
   "书包": "audio/999f3de2cf01.mp3",

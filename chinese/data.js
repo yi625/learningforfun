@@ -44,7 +44,7 @@ const LEVELS = [
       { hanzi: "狗", pinyin: "gǒu", english: "Dog", emoji: "🐶", category: "动物 Animal", type: "word" },
       { hanzi: "鸟", pinyin: "niǎo", english: "Bird", emoji: "🐦", category: "动物 Animal", type: "word" },
       { hanzi: "眼睛", pinyin: "yǎn jing", english: "Eyes", emoji: "👀", category: "身体 Body", type: "word" },
-      { hanzi: "小手", pinyin: "xiǎo shǒu", english: "Hand", emoji: "✋", category: "身体 Body", type: "word" }
+      { hanzi: "手", pinyin: "shǒu", english: "Hand", emoji: "✋", category: "身体 Body", type: "word" }
     ]
   },
   {
