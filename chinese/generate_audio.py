@@ -21,7 +21,7 @@ matches = re.findall(r'hanzi:\s*"([^"]+)"', content)
 unique_hanzi = list(dict.fromkeys(matches))
 
 # Family Tree & Relative Explanations (Pure, ultra-smooth, sweet child-teacher Mandarin voice)
-EXTRA_PHRASES = {
+EXTRA_PHRASES_ZH = {
     "yeye_desc": "爷爷，爸爸的爸爸。",
     "nainai_desc": "奶奶，爸爸的妈妈。",
     "waigong_desc": "外公，也可以叫公公，妈妈的爸爸。",
@@ -56,9 +56,48 @@ EXTRA_PHRASES = {
     "tab_guide": "亲戚称谓秘籍：认识大伯、叔叔、舅舅与堂表亲戚！"
 }
 
-all_items = [(w, w) for w in unique_hanzi] + [(k, v) for k, v in EXTRA_PHRASES.items()]
+# English Explanations (Natural, warm, cheerful JennyNeural teacher voice)
+EXTRA_PHRASES_EN = {
+    "yeye_en": "Grandfather, Dad's Father!",
+    "nainai_en": "Grandmother, Dad's Mother!",
+    "waigong_en": "Grandfather, Mom's Father!",
+    "waipo_en": "Grandmother, Mom's Mother!",
+    "dabo_en": "Uncle, Dad's elder brother!",
+    "bomu_en": "Aunt, elder uncle's wife!",
+    "baba_en": "Father, Dad!",
+    "shushu_en": "Uncle, Dad's younger brother!",
+    "shenshen_en": "Aunt, younger uncle's wife!",
+    "gugu_en": "Aunt, Dad's sister!",
+    "guzhang_en": "Uncle, Aunt's husband!",
+    "jiujiu_en": "Uncle, Mom's brother!",
+    "jiuma_en": "Aunt, Mom's brother's wife!",
+    "mama_en": "Mother, Mom!",
+    "ayi_en": "Aunt, Mom's sister!",
+    "yizhang_en": "Uncle, Mom's sister's husband!",
+    "tangge_en": "Cousin, Dad's brother's elder son!",
+    "tangjie_en": "Cousin, Dad's brother's elder daughter!",
+    "tangdi_en": "Cousin, Dad's brother's younger son!",
+    "tangmei_en": "Cousin, Dad's brother's younger daughter!",
+    "biaoge_p_en": "Cousin, Dad's sister's elder son!",
+    "biaomei_p_en": "Cousin, Dad's sister's younger daughter!",
+    "biaoge_m_en": "Cousin, Mom's sibling's elder son!",
+    "biaojie_m_en": "Cousin, Mom's sibling's elder daughter!",
+    "biaodi_m_en": "Cousin, Mom's sibling's younger son!",
+    "biaomei_m_en": "Cousin, Mom's sibling's younger daughter!",
+    "me_p_en": "This is me, Chinese superstar!",
+    "me_m_en": "This is me, Chinese superstar!",
+    "tab_paternal_en": "Father's side: grandparents, uncles, aunts and paternal cousins!",
+    "tab_maternal_en": "Mother's side: grandparents, uncles, aunts and maternal cousins!",
+    "tab_guide_en": "Chinese relatives guide: why Chinese distinguishes different uncles and cousins!"
+}
 
-print(f"Generating high quality Mandarin AI audio for {len(all_items)} clips...")
+all_items = (
+    [(w, w, 'zh-CN-XiaoxiaoNeural') for w in unique_hanzi] +
+    [(k, v, 'zh-CN-XiaoxiaoNeural') for k, v in EXTRA_PHRASES_ZH.items()] +
+    [(k, v, 'en-US-JennyNeural') for k, v in EXTRA_PHRASES_EN.items()]
+)
+
+print(f"Generating high quality AI audio for {len(all_items)} clips...")
 
 def get_audio_filename(text):
     h = hashlib.md5(text.encode('utf-8')).hexdigest()[:12]
@@ -67,7 +106,7 @@ def get_audio_filename(text):
 audio_manifest = {}
 sem = asyncio.Semaphore(6)
 
-async def generate_one(idx, key, text_to_speak):
+async def generate_one(idx, key, text_to_speak, voice_model):
     fname = get_audio_filename(key)
     fpath = os.path.join(AUDIO_DIR, fname)
     rel_path = f"audio/{fname}"
@@ -79,17 +118,16 @@ async def generate_one(idx, key, text_to_speak):
     async with sem:
         for attempt in range(3):
             try:
-                # Use Warm, Clear Child Teacher Neural Voice (zh-CN-XiaoxiaoNeural)
-                communicate = edge_tts.Communicate(text_to_speak, 'zh-CN-XiaoxiaoNeural', rate="+0%", pitch="+0Hz")
+                communicate = edge_tts.Communicate(text_to_speak, voice_model, rate="+0%", pitch="+0Hz")
                 await communicate.save(fpath)
-                print(f"[{idx+1}/{len(all_items)}] Saved: {key} -> {rel_path}")
+                print(f"[{idx+1}/{len(all_items)}] Saved: {key} -> {rel_path} ({voice_model})")
                 return
             except Exception as e:
                 print(f"Retry {key} due to: {e}")
                 await asyncio.sleep(0.5)
 
 async def main():
-    tasks = [generate_one(i, item[0], item[1]) for i, item in enumerate(all_items)]
+    tasks = [generate_one(i, item[0], item[1], item[2]) for i, item in enumerate(all_items)]
     await asyncio.gather(*tasks)
     
     manifest_js_path = os.path.join(os.path.dirname(__file__), 'audio_manifest.js')

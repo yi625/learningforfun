@@ -2079,6 +2079,58 @@ body {
   box-shadow: 0 2px 6px rgba(0,0,0,0.04);
 }
 
+/* Voice Explanation Mode Switcher */
+.tree-voice-mode-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
+  background: #EFF6FF;
+  padding: 0.6rem 1rem;
+  border-radius: var(--radius-full);
+  border: 1.5px solid #BFDBFE;
+}
+
+.voice-mode-label {
+  font-size: 0.88rem;
+  font-weight: 800;
+  color: #1E40AF;
+}
+
+.voice-mode-pills {
+  display: flex;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+}
+
+.voice-pill-btn {
+  background: white;
+  border: 1.5px solid #CBD5E1;
+  color: #334155;
+  font-weight: 800;
+  font-size: 0.82rem;
+  padding: 0.35rem 0.8rem;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: all 0.2s ease;
+}
+
+.voice-pill-btn:hover {
+  border-color: #3B82F6;
+  color: #1D4ED8;
+}
+
+.voice-pill-btn.active {
+  background: #2563EB;
+  border-color: #1D4ED8;
+  color: white;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.35);
+  transform: scale(1.04);
+}
+
 .tree-tab-btn:hover {
   border-color: #10B981;
   background: #F0FDF4;
@@ -2227,6 +2279,44 @@ body {
 
 .relative-card * {
   pointer-events: none;
+}
+
+.relative-card .card-lang-btns,
+.relative-card .card-lang-btns * {
+  pointer-events: auto !important;
+}
+
+.card-lang-btns {
+  display: flex;
+  gap: 0.35rem;
+  margin-top: 0.4rem;
+  width: 100%;
+  justify-content: center;
+}
+
+.card-lang-btn {
+  background: #F1F5F9;
+  border: 1px solid #CBD5E1;
+  color: #475569;
+  font-size: 0.65rem;
+  font-weight: 800;
+  padding: 0.18rem 0.4rem;
+  border-radius: 6px;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: all 0.15s ease;
+}
+
+.card-lang-btn:hover {
+  background: #10B981;
+  color: white;
+  border-color: #059669;
+  transform: scale(1.08);
+}
+
+.card-lang-btn.en:hover {
+  background: #3B82F6;
+  border-color: #2563EB;
 }
 
 .relative-sound-icon {

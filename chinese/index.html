@@ -413,6 +413,22 @@
         <p>认识爸爸家与妈妈家的亲戚称谓：大伯、叔叔、舅舅、姑姑、阿姨与堂表兄弟姐妹！</p>
       </div>
 
+      <!-- Voice Mode Switcher: Bilingual / Chinese / English -->
+      <div class="tree-voice-mode-bar">
+        <span class="voice-mode-label">🔊 发音讲解模式 (Voice Explanation Mode):</span>
+        <div class="voice-mode-pills">
+          <button type="button" class="voice-pill-btn active" data-voice-lang="bilingual" onclick="App.setFamilyVoiceMode('bilingual')">
+            <span>🌐 中英双语 (Bilingual)</span>
+          </button>
+          <button type="button" class="voice-pill-btn" data-voice-lang="zh" onclick="App.setFamilyVoiceMode('zh')">
+            <span>🇨🇳 纯中文 (Chinese)</span>
+          </button>
+          <button type="button" class="voice-pill-btn" data-voice-lang="en" onclick="App.setFamilyVoiceMode('en')">
+            <span>🇬🇧 English Only</span>
+          </button>
+        </div>
+      </div>
+
       <!-- Family Tree Navigation Tabs -->
       <div class="family-tree-tabs">
         <button class="tree-tab-btn active" data-tab="paternal">
@@ -520,9 +536,9 @@
 
   <!-- Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.5/dist/hanzi-writer.min.js"></script>
-  <script src="data.js?v=2.1"></script>
-  <script src="audio_manifest.js?v=2.1"></script>
-  <script src="sound_effects.js?v=2.1"></script>
-  <script src="app.js?v=2.1"></script>
+  <script src="data.js?v=2.2"></script>
+  <script src="audio_manifest.js?v=2.2"></script>
+  <script src="sound_effects.js?v=2.2"></script>
+  <script src="app.js?v=2.2"></script>
 </body>
 </html>

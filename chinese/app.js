@@ -32,6 +32,7 @@ const App = (() => {
     userName: '',
     userAvatar: '🐼',
     lastMode: 'quiz',
+    familyVoiceMode: 'bilingual',
   };
 
   let currentAudio = null;
@@ -1265,36 +1266,94 @@ const App = (() => {
   let globalAudioPlayer = null;
   let lastAudioPlayTime = 0;
   let lastAudioPlayKey = null;
+  let audioSequenceTimer = null;
 
-  function playPreRecordedAudio(audioPath) {
-    if (!audioPath) return;
+  function setFamilyVoiceMode(mode) {
+    state.familyVoiceMode = mode;
+    if (typeof SoundEffects !== 'undefined' && SoundEffects.playBubble) {
+      try { SoundEffects.playBubble(); } catch(e) {}
+    }
+    document.querySelectorAll('.voice-pill-btn').forEach(btn => {
+      if (btn.getAttribute('data-voice-lang') === mode) {
+        btn.classList.add('active');
+      } else {
+        btn.classList.remove('active');
+      }
+    });
+  }
+
+  function playPreRecordedAudio(audioPath, onEndedCallback) {
+    if (!audioPath) {
+      if (onEndedCallback) onEndedCallback();
+      return;
+    }
     try {
+      if (audioSequenceTimer) {
+        clearTimeout(audioSequenceTimer);
+        audioSequenceTimer = null;
+      }
       if (!globalAudioPlayer) {
         globalAudioPlayer = new Audio();
       }
       globalAudioPlayer.pause();
       globalAudioPlayer.currentTime = 0;
       globalAudioPlayer.src = audioPath;
+      
+      globalAudioPlayer.onended = null;
+      if (onEndedCallback) {
+        globalAudioPlayer.onended = () => {
+          onEndedCallback();
+        };
+      }
+
       const playPromise = globalAudioPlayer.play();
       if (playPromise !== undefined) {
         playPromise.catch(err => {
-          console.warn('[Audio] Playback failed on first attempt:', err);
+          console.warn('[Audio] Playback issue:', err);
+          if (onEndedCallback) onEndedCallback();
         });
       }
       currentAudio = globalAudioPlayer;
     } catch(e) {
       console.warn('[Audio] Exception during playback:', e);
+      if (onEndedCallback) onEndedCallback();
     }
   }
 
-  function playRelativeCard(personId, hanzi) {
+  function playTabAudio(zhKey, enKey) {
+    const mode = state.familyVoiceMode || 'bilingual';
+    const zhAudio = typeof AUDIO_MANIFEST !== 'undefined' ? AUDIO_MANIFEST[zhKey] : null;
+    const enAudio = typeof AUDIO_MANIFEST !== 'undefined' ? AUDIO_MANIFEST[enKey] : null;
+
+    if (mode === 'zh') {
+      if (zhAudio) playPreRecordedAudio(zhAudio);
+    } else if (mode === 'en') {
+      if (enAudio) playPreRecordedAudio(enAudio);
+    } else {
+      // Bilingual mode: Chinese first, then English
+      if (zhAudio) {
+        playPreRecordedAudio(zhAudio, () => {
+          if (enAudio) {
+            audioSequenceTimer = setTimeout(() => {
+              playPreRecordedAudio(enAudio);
+            }, 300);
+          }
+        });
+      } else if (enAudio) {
+        playPreRecordedAudio(enAudio);
+      }
+    }
+  }
+
+  function playRelativeCard(personId, hanzi, specificLang) {
     const now = Date.now();
+    const actionKey = personId + '_' + (specificLang || 'auto');
     // Debounce duplicate click/touch calls within 250ms
-    if (now - lastAudioPlayTime < 250 && lastAudioPlayKey === personId) {
+    if (now - lastAudioPlayTime < 250 && lastAudioPlayKey === actionKey) {
       return;
     }
     lastAudioPlayTime = now;
-    lastAudioPlayKey = personId;
+    lastAudioPlayKey = actionKey;
 
     if (typeof SoundEffects !== 'undefined' && SoundEffects.playPop) {
       try { SoundEffects.playPop(); } catch(e) {}
@@ -1304,42 +1363,53 @@ const App = (() => {
     const allCards = document.querySelectorAll(`.relative-card[data-person-id="${personId}"]`);
     allCards.forEach(c => {
       c.classList.add('playing');
-      setTimeout(() => c.classList.remove('playing'), 2500);
+      setTimeout(() => c.classList.remove('playing'), 3000);
     });
 
-    if (personId === 'me_p' || personId === 'me_m' || hanzi === '我') {
-      if (typeof SoundEffects !== 'undefined' && SoundEffects.playVictory) {
-        try { SoundEffects.playVictory(); } catch(e) {}
-      }
-      const descKey = (personId === 'me_m' ? 'me_m_desc' : 'me_p_desc');
-      if (typeof AUDIO_MANIFEST !== 'undefined' && AUDIO_MANIFEST[descKey]) {
-        playPreRecordedAudio(AUDIO_MANIFEST[descKey]);
+    const mode = specificLang || state.familyVoiceMode || 'bilingual';
+    const zhKey = (personId === 'me_m' ? 'me_m_desc' : (personId === 'me_p' ? 'me_p_desc' : personId + '_desc'));
+    const enKey = (personId === 'me_m' ? 'me_m_en' : (personId === 'me_p' ? 'me_p_en' : personId + '_en'));
+
+    const zhAudio = typeof AUDIO_MANIFEST !== 'undefined' ? (AUDIO_MANIFEST[zhKey] || AUDIO_MANIFEST[hanzi]) : null;
+    const enAudio = typeof AUDIO_MANIFEST !== 'undefined' ? AUDIO_MANIFEST[enKey] : null;
+
+    if (mode === 'zh') {
+      if (zhAudio) {
+        playPreRecordedAudio(zhAudio);
       } else {
-        const name = state.userName || '小朋友';
-        speakBilingual(`这是我，${name}，华语小天才！`, `This is me, ${name}, Chinese superstar!`);
+        speak(hanzi);
       }
       return;
     }
 
-    // 1. Try Neural AI explanation clip (e.g. yeye_desc, dabo_desc)
-    const descKey = personId + '_desc';
-    if (typeof AUDIO_MANIFEST !== 'undefined' && AUDIO_MANIFEST[descKey]) {
-      playPreRecordedAudio(AUDIO_MANIFEST[descKey]);
+    if (mode === 'en') {
+      if (enAudio) {
+        playPreRecordedAudio(enAudio);
+      } else {
+        const speechInfo = FAMILY_TREE_SPEECH[personId];
+        if (speechInfo) speakFallback(speechInfo.en);
+      }
       return;
     }
 
-    // 2. Try single word Neural AI clip (e.g. 爷爷, 大伯)
-    if (typeof AUDIO_MANIFEST !== 'undefined' && AUDIO_MANIFEST[hanzi]) {
-      playPreRecordedAudio(AUDIO_MANIFEST[hanzi]);
-      return;
-    }
-
-    // 3. Fallback to SpeechSynthesis
-    const speechInfo = FAMILY_TREE_SPEECH[personId];
-    if (speechInfo) {
-      speakBilingual(speechInfo.zh, speechInfo.en);
-    } else if (hanzi) {
-      speak(hanzi);
+    // Bilingual Mode: Play Chinese explanation, followed immediately by English explanation!
+    if (zhAudio) {
+      playPreRecordedAudio(zhAudio, () => {
+        if (enAudio) {
+          audioSequenceTimer = setTimeout(() => {
+            playPreRecordedAudio(enAudio);
+          }, 300);
+        }
+      });
+    } else if (enAudio) {
+      playPreRecordedAudio(enAudio);
+    } else {
+      const speechInfo = FAMILY_TREE_SPEECH[personId];
+      if (speechInfo) {
+        speakBilingual(speechInfo.zh, speechInfo.en);
+      } else if (hanzi) {
+        speak(hanzi);
+      }
     }
   }
 
@@ -1347,17 +1417,23 @@ const App = (() => {
     currentTreeTab = 'paternal';
     showView('family-tree');
     renderFamilyTree();
-    if (typeof AUDIO_MANIFEST !== 'undefined' && AUDIO_MANIFEST['tab_paternal']) {
-      playPreRecordedAudio(AUDIO_MANIFEST['tab_paternal']);
-    } else {
-      speakBilingual("欢迎来到家族亲戚树！点击卡片听讲解！", "Welcome to Chinese Family Tree! Tap any card to learn!");
-    }
+    playTabAudio('tab_paternal', 'tab_paternal_en');
   }
 
   function renderFamilyTree() {
     const tabs = document.querySelectorAll('.tree-tab-btn');
     tabs.forEach(btn => {
       if (btn.getAttribute('data-tab') === currentTreeTab) {
+        btn.classList.add('active');
+      } else {
+        btn.classList.remove('active');
+      }
+    });
+
+    // Update voice mode active pills
+    const mode = state.familyVoiceMode || 'bilingual';
+    document.querySelectorAll('.voice-pill-btn').forEach(btn => {
+      if (btn.getAttribute('data-voice-lang') === mode) {
         btn.classList.add('active');
       } else {
         btn.classList.remove('active');
@@ -1410,13 +1486,17 @@ const App = (() => {
     const nameDisplay = isMe ? (state.userName || '我') : person.hanzi;
 
     return `
-      <div class="relative-card ${isMe ? 'is-me' : ''}" data-person-id="${person.id}" data-hanzi="${person.hanzi}" onclick="App.playRelativeCard('${person.id}', '${person.hanzi}')" title="点击听讲解 (Click to listen & learn)">
+      <div class="relative-card ${isMe ? 'is-me' : ''}" data-person-id="${person.id}" data-hanzi="${person.hanzi}" onclick="App.playRelativeCard('${person.id}', '${person.hanzi}')" title="点击听讲解 (Click to listen)">
         <span class="relative-sound-icon">🔊</span>
         <div class="relative-avatar">${avatar}</div>
         <div class="relative-hanzi">${nameDisplay}</div>
         <div class="relative-pinyin">${person.pinyin}</div>
         <div class="relative-english">${person.english}</div>
         <div class="relative-relation-pill">${person.relation || person.role}</div>
+        <div class="card-lang-btns">
+          <button type="button" class="card-lang-btn zh" onclick="event.stopPropagation(); App.playRelativeCard('${person.id}', '${person.hanzi}', 'zh');" title="听中文讲解 (Chinese)">🇨🇳 中文</button>
+          <button type="button" class="card-lang-btn en" onclick="event.stopPropagation(); App.playRelativeCard('${person.id}', '${person.hanzi}', 'en');" title="Listen English Explanation">🇬🇧 ENG</button>
+        </div>
       </div>
     `;
   }
@@ -2822,17 +2902,11 @@ const App = (() => {
           currentTreeTab = tab;
           renderFamilyTree();
           if (tab === 'paternal') {
-            if (typeof AUDIO_MANIFEST !== 'undefined' && AUDIO_MANIFEST['tab_paternal']) {
-              playPreRecordedAudio(AUDIO_MANIFEST['tab_paternal']);
-            }
+            playTabAudio('tab_paternal', 'tab_paternal_en');
           } else if (tab === 'maternal') {
-            if (typeof AUDIO_MANIFEST !== 'undefined' && AUDIO_MANIFEST['tab_maternal']) {
-              playPreRecordedAudio(AUDIO_MANIFEST['tab_maternal']);
-            }
+            playTabAudio('tab_maternal', 'tab_maternal_en');
           } else if (tab === 'guide') {
-            if (typeof AUDIO_MANIFEST !== 'undefined' && AUDIO_MANIFEST['tab_guide']) {
-              playPreRecordedAudio(AUDIO_MANIFEST['tab_guide']);
-            }
+            playTabAudio('tab_guide', 'tab_guide_en');
           }
         }
       });
@@ -2867,7 +2941,8 @@ const App = (() => {
     goToModes,
     selectAvatar,
     startFamilyTreeMode,
-    playRelativeCard
+    playRelativeCard,
+    setFamilyVoiceMode
   };
 })();
 
