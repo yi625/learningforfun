@@ -143,11 +143,17 @@ const SoundEffects = (() => {
     osc.stop(c.currentTime + 0.1);
   }
 
+  // 6. Cute Button Pop Sound 🍿
+  function playPop() {
+    playBubble();
+  }
+
   return {
     playCorrect,
     playTryAgain,
     playStar,
     playVictory,
-    playBubble
+    playBubble,
+    playPop
   };
 })();

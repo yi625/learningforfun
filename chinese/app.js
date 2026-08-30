@@ -635,23 +635,10 @@ const App = (() => {
   function speak(text) {
     if (!text) return;
     const cleanText = text.trim();
-    console.log('[TTS] Speaking:', cleanText);
-
-    if (currentAudio) {
-      try {
-        currentAudio.pause();
-        currentAudio.currentTime = 0;
-      } catch(e) {}
-    }
 
     // 1. Play pre-generated Neural AI audio
     if (typeof AUDIO_MANIFEST !== 'undefined' && AUDIO_MANIFEST[cleanText]) {
-      const audioPath = AUDIO_MANIFEST[cleanText];
-      currentAudio = new Audio(audioPath);
-      currentAudio.play().catch(err => {
-        console.warn('[TTS] Audio playback fallback:', err);
-        speakFallback(cleanText);
-      });
+      playPreRecordedAudio(AUDIO_MANIFEST[cleanText]);
       return;
     }
 
@@ -1274,21 +1261,44 @@ const App = (() => {
     }
   };
 
+  // Dedicated audio player instance with debouncing to prevent mobile interruption
+  let globalAudioPlayer = null;
+  let lastAudioPlayTime = 0;
+  let lastAudioPlayKey = null;
+
   function playPreRecordedAudio(audioPath) {
-    if (currentAudio) {
-      try {
-        currentAudio.pause();
-        currentAudio.currentTime = 0;
-      } catch(e) {}
+    if (!audioPath) return;
+    try {
+      if (!globalAudioPlayer) {
+        globalAudioPlayer = new Audio();
+      }
+      globalAudioPlayer.pause();
+      globalAudioPlayer.currentTime = 0;
+      globalAudioPlayer.src = audioPath;
+      const playPromise = globalAudioPlayer.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(err => {
+          console.warn('[Audio] Playback failed on first attempt:', err);
+        });
+      }
+      currentAudio = globalAudioPlayer;
+    } catch(e) {
+      console.warn('[Audio] Exception during playback:', e);
     }
-    currentAudio = new Audio(audioPath);
-    currentAudio.play().catch(err => {
-      console.warn('[Audio] Playback failed, falling back to TTS:', err);
-    });
   }
 
   function playRelativeCard(personId, hanzi) {
-    SoundEffects.playPop();
+    const now = Date.now();
+    // Debounce duplicate click/touch calls within 250ms
+    if (now - lastAudioPlayTime < 250 && lastAudioPlayKey === personId) {
+      return;
+    }
+    lastAudioPlayTime = now;
+    lastAudioPlayKey = personId;
+
+    if (typeof SoundEffects !== 'undefined' && SoundEffects.playPop) {
+      try { SoundEffects.playPop(); } catch(e) {}
+    }
 
     // Highlight card with glowing border
     const allCards = document.querySelectorAll(`.relative-card[data-person-id="${personId}"]`);
@@ -1298,7 +1308,9 @@ const App = (() => {
     });
 
     if (personId === 'me_p' || personId === 'me_m' || hanzi === '我') {
-      SoundEffects.playVictory();
+      if (typeof SoundEffects !== 'undefined' && SoundEffects.playVictory) {
+        try { SoundEffects.playVictory(); } catch(e) {}
+      }
       const descKey = (personId === 'me_m' ? 'me_m_desc' : 'me_p_desc');
       if (typeof AUDIO_MANIFEST !== 'undefined' && AUDIO_MANIFEST[descKey]) {
         playPreRecordedAudio(AUDIO_MANIFEST[descKey]);
@@ -1390,15 +1402,6 @@ const App = (() => {
     `;
 
     container.innerHTML = html;
-
-    // Attach card audio click listeners with full AI bilingual explanation!
-    container.querySelectorAll('.relative-card').forEach(card => {
-      card.addEventListener('click', () => {
-        const personId = card.getAttribute('data-person-id');
-        const hanzi = card.getAttribute('data-hanzi');
-        playRelativeCard(personId, hanzi);
-      });
-    });
   }
 
   function renderRelativeCard(person) {
