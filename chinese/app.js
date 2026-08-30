@@ -2819,11 +2819,17 @@ const App = (() => {
           currentTreeTab = tab;
           renderFamilyTree();
           if (tab === 'paternal') {
-            speakBilingual("爸爸这一边：认识爷爷、奶奶、大伯、叔叔、姑姑与堂兄弟姐妹！", "Father's side: grandparents, uncles, aunts and paternal cousins!");
+            if (typeof AUDIO_MANIFEST !== 'undefined' && AUDIO_MANIFEST['tab_paternal']) {
+              playPreRecordedAudio(AUDIO_MANIFEST['tab_paternal']);
+            }
           } else if (tab === 'maternal') {
-            speakBilingual("妈妈这一边：认识外公、外婆、舅舅、阿姨与表兄弟姐妹！", "Mother's side: grandparents, uncles, aunts and maternal cousins!");
+            if (typeof AUDIO_MANIFEST !== 'undefined' && AUDIO_MANIFEST['tab_maternal']) {
+              playPreRecordedAudio(AUDIO_MANIFEST['tab_maternal']);
+            }
           } else if (tab === 'guide') {
-            speakBilingual("亲戚称谓秘籍：为什么英文叫 Uncle，华语分大伯、叔叔、舅舅、姑丈与姨丈！", "Chinese relative guide: why Chinese distinguishes different uncles and cousins!");
+            if (typeof AUDIO_MANIFEST !== 'undefined' && AUDIO_MANIFEST['tab_guide']) {
+              playPreRecordedAudio(AUDIO_MANIFEST['tab_guide']);
+            }
           }
         }
       });

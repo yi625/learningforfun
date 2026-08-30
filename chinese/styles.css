@@ -2225,6 +2225,10 @@ body {
   white-space: nowrap;
 }
 
+.relative-card * {
+  pointer-events: none;
+}
+
 .relative-sound-icon {
   position: absolute;
   top: 0.4rem;
