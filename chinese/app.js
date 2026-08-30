@@ -494,13 +494,19 @@ const App = (() => {
     const hiddenInput = document.getElementById('selected-avatar-input');
     if (hiddenInput) hiddenInput.value = avatar;
 
-    document.querySelectorAll('.avatar-choice-btn').forEach(btn => {
-      if (btn.getAttribute('data-avatar') === avatar) {
+    const btns = document.querySelectorAll('.avatar-choice-btn');
+    btns.forEach(btn => {
+      const btnAv = btn.getAttribute('data-avatar');
+      if (btnAv === avatar) {
         btn.classList.add('active');
       } else {
         btn.classList.remove('active');
       }
     });
+
+    if (typeof SoundEffects !== 'undefined' && SoundEffects.playPop) {
+      SoundEffects.playPop();
+    }
   }
 
   function showProfileModal(viewMode) {
@@ -2549,13 +2555,28 @@ const App = (() => {
     // Avatar choice buttons with instant touch & click delegation
     const avatarGrid = document.getElementById('avatar-picker-grid');
     if (avatarGrid) {
-      avatarGrid.addEventListener('click', (e) => {
+      const handleAvatarSelect = (e) => {
         const btn = e.target.closest('.avatar-choice-btn');
         if (btn) {
           e.preventDefault();
-          SoundEffects.playPop();
           const av = btn.getAttribute('data-avatar');
-          selectAvatar(av);
+          if (av) selectAvatar(av);
+        }
+      };
+      avatarGrid.addEventListener('click', handleAvatarSelect);
+      avatarGrid.addEventListener('touchend', handleAvatarSelect);
+    }
+
+    const btnSaveProfile = document.getElementById('btn-save-profile');
+    if (btnSaveProfile) {
+      btnSaveProfile.addEventListener('click', (e) => {
+        const idInput = document.getElementById('profile-id-input');
+        const nameInput = document.getElementById('user-name-input');
+        const avatarInput = document.getElementById('selected-avatar-input');
+        if (nameInput && nameInput.value.trim()) {
+          e.preventDefault();
+          const chosenAvatar = (avatarInput && avatarInput.value) ? avatarInput.value : (state.userAvatar || '👧');
+          saveUserProfile(idInput ? idInput.value : '', nameInput.value, chosenAvatar);
         }
       });
     }
@@ -2629,7 +2650,9 @@ const App = (() => {
     init,
     speak,
     goToLevels,
-    goToModes
+    goToModes,
+    selectAvatar,
+    startFamilyTreeMode
   };
 })();
 
