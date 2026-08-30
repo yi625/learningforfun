@@ -487,6 +487,21 @@ const App = (() => {
     }
   }
 
+  function selectAvatar(avatarChar) {
+    const avatar = avatarChar || '👧';
+    state.userAvatar = avatar;
+    const hiddenInput = document.getElementById('selected-avatar-input');
+    if (hiddenInput) hiddenInput.value = avatar;
+
+    document.querySelectorAll('.avatar-choice-btn').forEach(btn => {
+      if (btn.getAttribute('data-avatar') === avatar) {
+        btn.classList.add('active');
+      } else {
+        btn.classList.remove('active');
+      }
+    });
+  }
+
   function showProfileModal(viewMode) {
     const modal = document.getElementById('profile-modal');
     const listSection = document.getElementById('profiles-list-section');
@@ -521,15 +536,8 @@ const App = (() => {
         }
       }
 
-      // Highlight current avatar
-      document.querySelectorAll('.avatar-choice-btn').forEach(btn => {
-        if (btn.getAttribute('data-avatar') === (state.userAvatar || '👧')) {
-          btn.classList.add('active');
-        } else {
-          btn.classList.remove('active');
-        }
-      });
-      setTimeout(() => nameInput && nameInput.focus(), 150);
+      selectAvatar(state.userAvatar || '👧');
+      setTimeout(() => nameInput && nameInput.focus(), 100);
     } else {
       // Show list of profiles
       if (formSection) formSection.classList.remove('active');
@@ -588,12 +596,8 @@ const App = (() => {
               if (nameInput) nameInput.value = targetP.name;
               if (formTitle) formTitle.textContent = `✏️ 编辑 ${targetP.name} 的形象与名字`;
               if (deleteFormBtn) deleteFormBtn.classList.remove('hidden');
-              state.userAvatar = targetP.avatar || '👧';
-              document.querySelectorAll('.avatar-choice-btn').forEach(b => {
-                if (b.getAttribute('data-avatar') === state.userAvatar) b.classList.add('active');
-                else b.classList.remove('active');
-              });
-              setTimeout(() => nameInput && nameInput.focus(), 150);
+              selectAvatar(targetP.avatar || '👧');
+              setTimeout(() => nameInput && nameInput.focus(), 100);
             }
           });
         });
@@ -2187,7 +2191,9 @@ const App = (() => {
         e.preventDefault();
         const idInput = document.getElementById('profile-id-input');
         const nameInput = document.getElementById('user-name-input');
-        saveUserProfile(idInput ? idInput.value : '', nameInput.value, state.userAvatar);
+        const avatarInput = document.getElementById('selected-avatar-input');
+        const chosenAvatar = (avatarInput && avatarInput.value) ? avatarInput.value : (state.userAvatar || '👧');
+        saveUserProfile(idInput ? idInput.value : '', nameInput.value, chosenAvatar);
       });
     }
 
@@ -2240,15 +2246,19 @@ const App = (() => {
       });
     }
 
-    // Avatar choice buttons
-    document.querySelectorAll('.avatar-choice-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        SoundEffects.playPop();
-        document.querySelectorAll('.avatar-choice-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        state.userAvatar = btn.getAttribute('data-avatar') || '👧';
+    // Avatar choice buttons with instant touch & click delegation
+    const avatarGrid = document.getElementById('avatar-picker-grid');
+    if (avatarGrid) {
+      avatarGrid.addEventListener('click', (e) => {
+        const btn = e.target.closest('.avatar-choice-btn');
+        if (btn) {
+          e.preventDefault();
+          SoundEffects.playPop();
+          const av = btn.getAttribute('data-avatar');
+          selectAvatar(av);
+        }
       });
-    });
+    }
 
     const editProfileBtn = document.getElementById('edit-profile-btn');
     if (editProfileBtn) {
