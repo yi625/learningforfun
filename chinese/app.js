@@ -39,6 +39,9 @@ const App = (() => {
   let recognition = null;
   let quadCanvases = [null, null, null, null];
   let quadContexts = [null, null, null, null];
+  let quizWriterInstance = null;
+  let quizBoxPassed = false;
+  let quizTotalMistakes = 0;
 
   // Mascot encouraging quotes
   const PANDA_PRAISES = [
@@ -1754,6 +1757,7 @@ const App = (() => {
   function initQuadCanvases() {
     const dpr = window.devicePixelRatio || 1;
     for (let i = 1; i <= 4; i++) {
+      if (i === 2) continue; // Box 2 is HanziWriter quiz — skip raw canvas init
       const canvas = document.getElementById(`write-canvas-${i}`);
       if (!canvas) continue;
       const ctx = canvas.getContext('2d');
@@ -1805,6 +1809,106 @@ const App = (() => {
     }
   }
 
+  // ---- HanziWriter Quiz Box (Box 2) ----
+  function destroyQuizBox() {
+    if (quizWriterInstance) {
+      try { quizWriterInstance.cancelQuiz(); } catch(e) {}
+      quizWriterInstance = null;
+    }
+    quizBoxPassed = false;
+    quizTotalMistakes = 0;
+    const target = document.getElementById('hanzi-quiz-target');
+    if (target) target.innerHTML = '';
+    const feedback = document.getElementById('quiz-stroke-feedback');
+    if (feedback) feedback.innerHTML = '';
+    const star = document.getElementById('quad-star-2');
+    if (star) star.textContent = '☆';
+    const card = document.getElementById('quad-card-2');
+    if (card) card.classList.remove('completed');
+    const box = document.getElementById('quad-box-2');
+    if (box) box.classList.remove('pass-glow', 'shake-error');
+    state.quadCompleted[2] = false;
+  }
+
+  function initQuizBox(char) {
+    destroyQuizBox();
+
+    const target = document.getElementById('hanzi-quiz-target');
+    if (!target || typeof HanziWriter === 'undefined') return;
+
+    // Size quiz to fit the box
+    const parentBox = document.getElementById('quad-box-2');
+    const boxRect = parentBox ? parentBox.getBoundingClientRect() : { width: 220, height: 220 };
+    const size = Math.min(boxRect.width, boxRect.height) || 220;
+
+    quizWriterInstance = HanziWriter.create('hanzi-quiz-target', char, {
+      width: size,
+      height: size,
+      padding: 10,
+      showCharacter: false,
+      showOutline: true,
+      strokeColor: '#2D3436',
+      drawingColor: '#10B981',
+      outlineColor: '#CBD5E1',
+      highlightColor: '#3B82F6',
+      showHintAfterMisses: 2,
+      highlightOnComplete: true,
+      drawingWidth: 18,
+      strokeHighlightSpeed: 1.5,
+    });
+
+    const feedback = document.getElementById('quiz-stroke-feedback');
+
+    quizWriterInstance.quiz({
+      onCorrectStroke: function(strokeData) {
+        if (typeof SoundEffects !== 'undefined' && SoundEffects.playPop) {
+          try { SoundEffects.playPop(); } catch(e) {}
+        }
+        if (feedback) {
+          feedback.innerHTML = `<span class="quiz-fb-correct">✓ 第 ${strokeData.strokeNum + 1} 画正确！(Stroke ${strokeData.strokeNum + 1} correct!)</span>`;
+          feedback.className = 'quiz-stroke-feedback show correct';
+        }
+      },
+      onMistake: function(strokeData) {
+        quizTotalMistakes++;
+        if (typeof SoundEffects !== 'undefined' && SoundEffects.playTryAgain) {
+          try { SoundEffects.playTryAgain(); } catch(e) {}
+        }
+        if (feedback) {
+          const hint = strokeData.mistakesOnStroke >= 2
+            ? '💡 看提示吧！(Look at the hint!)'
+            : '🤔 笔画不对哦，再试一次！(Wrong stroke, try again!)';
+          feedback.innerHTML = `<span class="quiz-fb-wrong">${hint}</span>`;
+          feedback.className = 'quiz-stroke-feedback show wrong';
+        }
+      },
+      onComplete: function(summaryData) {
+        quizBoxPassed = true;
+        quizTotalMistakes = summaryData.totalMistakes;
+        state.quadCompleted[2] = true;
+
+        if (typeof SoundEffects !== 'undefined' && SoundEffects.playVictory) {
+          try { SoundEffects.playVictory(); } catch(e) {}
+        }
+
+        const star = document.getElementById('quad-star-2');
+        if (star) star.textContent = '⭐';
+        const card = document.getElementById('quad-card-2');
+        if (card) card.classList.add('completed');
+        const box = document.getElementById('quad-box-2');
+        if (box) box.classList.add('pass-glow');
+
+        if (feedback) {
+          const praise = summaryData.totalMistakes === 0
+            ? '🌟 满分！笔画全对！(Perfect! All strokes correct!)'
+            : `🎉 写完啦！错了 ${summaryData.totalMistakes} 次 (Done! ${summaryData.totalMistakes} mistakes)`;
+          feedback.innerHTML = `<span class="quiz-fb-complete">${praise}</span>`;
+          feedback.className = 'quiz-stroke-feedback show complete';
+        }
+      }
+    });
+  }
+
   function setActiveQuadBox(boxNum) {
     state.activeQuadIndex = boxNum;
     for (let i = 1; i <= 4; i++) {
@@ -1854,6 +1958,18 @@ const App = (() => {
   function clearActiveBox() {
     SoundEffects.playBubble();
     const idx = state.activeQuadIndex;
+
+    if (idx === 2) {
+      // Re-initialize the HanziWriter quiz for Box 2
+      const word = state.currentLevel.vocabulary[state.currentWriteIndex];
+      const chars = Array.from(word.hanzi);
+      const currentChar = chars[state.currentCharIndex] || word.hanzi;
+      initQuizBox(currentChar);
+      const fb = document.getElementById('write-feedback');
+      if (fb) fb.classList.add('hidden');
+      return;
+    }
+
     const canvas = quadCanvases[idx - 1];
     const ctx = quadContexts[idx - 1];
     if (canvas && ctx) {
@@ -1877,6 +1993,7 @@ const App = (() => {
     SoundEffects.playBubble();
     state.quadBoxStrokes = { 1: 0, 2: 0, 3: 0, 4: 0 };
     for (let i = 1; i <= 4; i++) {
+      if (i === 2) continue; // Skip quiz box, handled separately
       const canvas = quadCanvases[i - 1];
       const ctx = quadContexts[i - 1];
       if (canvas && ctx) {
@@ -1889,6 +2006,15 @@ const App = (() => {
       if (card) card.classList.remove('completed');
       const box = document.getElementById(`quad-box-${i}`);
       if (box) box.classList.remove('pass-glow', 'shake-error');
+    }
+    // Re-init quiz box
+    const word = state.currentLevel ? state.currentLevel.vocabulary[state.currentWriteIndex] : null;
+    if (word) {
+      const chars = Array.from(word.hanzi);
+      const currentChar = chars[state.currentCharIndex] || word.hanzi;
+      initQuizBox(currentChar);
+    } else {
+      destroyQuizBox();
     }
     const fb = document.getElementById('write-feedback');
     if (fb) fb.classList.add('hidden');
@@ -1976,253 +2102,9 @@ const App = (() => {
     }, 200);
   }
 
-  // Exact standard stroke counts for Chinese foundation curriculum
-  const CHAR_STROKE_COUNT = {
-    '一': 1, '二': 2, '三': 3, '四': 5, '五': 4, '六': 4, '七': 2, '八': 2, '九': 2, '十': 2,
-    // Personal Pronouns (人称代词)
-    '我': 7, '你': 7, '他': 5, '她': 6, '它': 5, '们': 5,
-    '爸': 8, '妈': 6, '哥': 10, '姐': 8, '弟': 7, '妹': 8,
-    '红': 6, '色': 6, '蓝': 13, '黄': 11, '太': 4, '阳': 6, '月': 4, '亮': 9,
-    '猫': 11, '狗': 8, '鸟': 5, '眼': 11, '睛': 13, '手': 4,
-    '老': 6, '师': 6, '同': 6, '学': 8, '书': 4, '包': 5, '铅': 10, '笔': 10, '尺': 4, '子': 3, '橡': 15, '皮': 5,
-    '早': 6, '上': 3, '好': 6, '谢': 12, '对': 5, '不': 4, '起': 10, '没': 7, '关': 6, '系': 7, '再': 6, '见': 4,
-    '读': 10, '写': 5, '字': 6, '画': 8, '吃': 6, '饭': 7, '喝': 12, '水': 4,
-    '苹': 8, '果': 8, '香': 9, '蕉': 15, '西': 6, '瓜': 5, '面': 9, '牛': 4, '奶': 5,
-    '开': 4, '心': 4, '伤': 6, '生': 5, '气': 4, '害': 10, '怕': 8, '勇': 9, '敢': 12,
-    '晴': 12, '天': 4, '下': 3, '雨': 8, '刮': 8, '风': 4, '今': 4, '明': 8,
-    '大': 3, '小': 3, '多': 6, '少': 4, '高': 10, '矮': 13, '快': 7, '慢': 14,
-    '唱': 11, '歌': 14, '跳': 13, '舞': 14, '游': 12, '泳': 8, '跑': 12, '步': 7,
-    '校': 10, '公': 4, '园': 7, '医': 7, '院': 9, '图': 8, '馆': 11, '超': 12, '市': 5,
-    '汽': 7, '车': 4, '巴': 4, '士': 3, '飞': 3, '机': 6, '火': 4, '自': 6, '行': 6,
-    '礼': 5, '貌': 14, '诚': 8, '实': 8, '勤': 13, '劳': 7, '团': 6, '结': 9, '爱': 10, '护': 7, '物': 8,
-    '意': 13, '助': 7, '人': 2, '为': 4, '乐': 5, '井': 4, '条': 7, '强': 12, '息': 10,
-    // Family Relatives
-    '爷': 6, '奶': 5, '外': 5, '婆': 11, '伯': 7, '叔': 8, '舅': 13, '姑': 8, '阿': 7, '姨': 9, '母': 5, '婶': 11, '丈': 3, '堂': 11, '表': 8
-  };
+  // NOTE: Old CHAR_STROKE_COUNT and verifyWritingAccuracy pixel heuristic removed.
+  // Box 2 now uses HanziWriter quiz() for real stroke-by-stroke AI validation.
 
-  // ---- Advanced AI Handwriting Verification Engine for Quad Boxes ----
-  function verifyWritingAccuracy(canvas, expectedChar, boxNum) {
-    if (!canvas) return { pass: false, drawn: false, message: '请在田字格里写字哦！(Please write on canvas!)' };
-    const ctx = canvas.getContext('2d');
-    const w = canvas.width;
-    const h = canvas.height;
-
-    // 1. Extract drawn pixel coordinates and bounding box
-    const drawnData = ctx.getImageData(0, 0, w, h).data;
-    let drawnPoints = [];
-    let minX = w, maxX = 0, minY = h, maxY = 0;
-
-    for (let y = 0; y < h; y += 3) {
-      for (let x = 0; x < w; x += 3) {
-        const idx = (y * w + x) * 4 + 3; // alpha channel
-        if (drawnData[idx] > 40) {
-          drawnPoints.push({ x, y });
-          if (x < minX) minX = x;
-          if (x > maxX) maxX = x;
-          if (y < minY) minY = y;
-          if (y > maxY) maxY = y;
-        }
-      }
-    }
-
-    if (drawnPoints.length < 20) {
-      return {
-        pass: false,
-        drawn: false,
-        reason: 'too_empty',
-        message: '✏️ 还没有写字哦！(Please write first!)'
-      };
-    }
-
-    const drawnWidth = maxX - minX;
-    const drawnHeight = maxY - minY;
-    const drawnAspectRatio = drawnHeight / (drawnWidth + 1e-4); // height / width
-    const userStrokes = (state.quadBoxStrokes && state.quadBoxStrokes[boxNum]) || 1;
-    const expectedStrokes = CHAR_STROKE_COUNT[expectedChar] || (STROKE_DATA[expectedChar] ? STROKE_DATA[expectedChar].length : 4);
-
-    // 2. SPECIFIC RIGID RULES FOR FOUNDATION CHARACTERS
-    if (expectedChar === '一') {
-      // "一" must be a single horizontal stroke!
-      if (userStrokes > 2) {
-        return {
-          pass: false,
-          drawn: true,
-          reason: 'too_many_strokes',
-          message: `🤔 这是多笔画字哦，‘一’ 只有 1 画横线！(‘一’ has only 1 horizontal stroke!)`
-        };
-      }
-      // Height must be small, aspect ratio (height/width) must be <= 0.38
-      if (drawnAspectRatio > 0.38 || drawnHeight > h * 0.32) {
-        return {
-          pass: false,
-          drawn: true,
-          reason: 'wrong_shape',
-          message: `🤔 字形写偏啦！‘一’ 是一条水平横线哦！(‘一’ should be a flat horizontal line!)`
-        };
-      }
-      // Width must be at least 22% of box width
-      if (drawnWidth < w * 0.22) {
-        return {
-          pass: false,
-          drawn: true,
-          reason: 'too_short',
-          message: `✏️ 横线太短啦，请把‘一’写长一点！(Horizontal stroke is too short!)`
-        };
-      }
-    } else if (expectedChar === '二') {
-      // "二" has 2 horizontal strokes
-      if (userStrokes === 1 && drawnAspectRatio < 0.28) {
-        return {
-          pass: false,
-          drawn: true,
-          reason: 'too_few_strokes',
-          message: `🤔 只有 1 画，这是‘一’哦！‘二’ 有上下 2 画横！(‘二’ has 2 horizontal strokes!)`
-        };
-      }
-      if (userStrokes > 4) {
-        return {
-          pass: false,
-          drawn: true,
-          reason: 'too_many_strokes',
-          message: `🤔 笔画太多啦！‘二’ 只有上下 2 画横！(‘二’ has only 2 strokes!)`
-        };
-      }
-      if (drawnAspectRatio < 0.22 || drawnHeight < h * 0.16) {
-        return {
-          pass: false,
-          drawn: true,
-          reason: 'wrong_shape',
-          message: `🤔 ‘二’ 应该包含上下两条横线哦！(‘二’ has an upper and lower horizontal stroke!)`
-        };
-      }
-    } else if (expectedChar === '三') {
-      if (userStrokes < 2 && drawnAspectRatio < 0.30) {
-        return {
-          pass: false,
-          drawn: true,
-          reason: 'too_few_strokes',
-          message: `🤔 这是‘一’哦，‘三’ 有 3 画横线！(‘三’ has 3 horizontal strokes!)`
-        };
-      }
-    } else if (expectedChar === '四' || expectedChar === '口' || expectedChar === '日' || expectedChar === '田') {
-      if (drawnWidth < w * 0.25 || drawnHeight < h * 0.25) {
-        return {
-          pass: false,
-          drawn: true,
-          reason: 'too_small',
-          message: `✏️ 字写得太小或不完整哦，请认真书写‘${expectedChar}’！`
-        };
-      }
-    }
-
-    // 3. STROKE COUNT PLAUSIBILITY CHECK FOR ALL CHARACTERS
-    if (expectedStrokes <= 3 && userStrokes > expectedStrokes + 3) {
-      return {
-        pass: false,
-        drawn: true,
-        reason: 'too_many_strokes',
-        message: `🤔 笔画太多啦，‘${expectedChar}’ 只有 ${expectedStrokes} 画哦！(‘${expectedChar}’ only has ${expectedStrokes} strokes!)`
-      };
-    }
-
-    // 4. RENDER REFERENCE CHARACTER WITH MATCHING STROKE THICKNESS
-    const offCanvas = document.createElement('canvas');
-    offCanvas.width = w;
-    offCanvas.height = h;
-    const offCtx = offCanvas.getContext('2d');
-    offCtx.fillStyle = '#000000';
-    offCtx.strokeStyle = '#000000';
-    offCtx.lineWidth = Math.max(12, Math.round(w * 0.065));
-    offCtx.lineCap = 'round';
-    offCtx.lineJoin = 'round';
-
-    const fontSize = expectedChar.length >= 2 ? Math.round(w * 0.45) : Math.round(w * 0.68);
-    offCtx.font = `900 ${fontSize}px 'Noto Sans SC', 'Kaiti', 'STKaiti', 'Microsoft YaHei', sans-serif`;
-    offCtx.textAlign = 'center';
-    offCtx.textBaseline = 'middle';
-    offCtx.strokeText(expectedChar, w / 2, h / 2);
-    offCtx.fillText(expectedChar, w / 2, h / 2);
-
-    const targetData = offCtx.getImageData(0, 0, w, h).data;
-    let targetPoints = [];
-    for (let y = 0; y < h; y += 3) {
-      for (let x = 0; x < w; x += 3) {
-        const idx = (y * w + x) * 4 + 3;
-        if (targetData[idx] > 30) {
-          targetPoints.push({ x, y });
-        }
-      }
-    }
-
-    if (targetPoints.length === 0) {
-      return { pass: true, drawn: true, message: '🎉 写好了！(Done!)' };
-    }
-
-    // 5. PRECISION & RECALL PIXEL DISTANCE EVALUATION
-    const TOLERANCE = Math.max(14, Math.round(w * 0.068));
-    const TOLERANCE_SQ = TOLERANCE * TOLERANCE;
-
-    let inBoundsCount = 0;
-    let outOfBoundsCount = 0;
-
-    for (const p of drawnPoints) {
-      let isNear = false;
-      for (const tp of targetPoints) {
-        const distSq = (p.x - tp.x) * (p.x - tp.x) + (p.y - tp.y) * (p.y - tp.y);
-        if (distSq <= TOLERANCE_SQ) {
-          isNear = true;
-          break;
-        }
-      }
-      if (isNear) inBoundsCount++;
-      else outOfBoundsCount++;
-    }
-
-    let coveredTargetCount = 0;
-    for (const tp of targetPoints) {
-      let isCovered = false;
-      for (const p of drawnPoints) {
-        const distSq = (p.x - tp.x) * (p.x - tp.x) + (p.y - tp.y) * (p.y - tp.y);
-        if (distSq <= TOLERANCE_SQ) {
-          isCovered = true;
-          break;
-        }
-      }
-      if (isCovered) coveredTargetCount++;
-    }
-
-    const accuracy = inBoundsCount / (inBoundsCount + outOfBoundsCount + 1e-5);
-    const coverage = coveredTargetCount / (targetPoints.length + 1e-5);
-
-    // Required accuracy threshold: 68% in-bounds for simple characters, 60% for complex characters
-    const minAccuracy = expectedStrokes <= 2 ? 0.68 : 0.58;
-    const minCoverage = expectedStrokes <= 2 ? 0.38 : 0.28;
-
-    if (accuracy < minAccuracy) {
-      return {
-        pass: false,
-        drawn: true,
-        reason: 'inaccurate',
-        message: `🤔 笔画写偏啦！请沿着‘${expectedChar}’的字形认真书写！(Strokes went outside ‘${expectedChar}’!)`
-      };
-    }
-
-    if (coverage < minCoverage) {
-      return {
-        pass: false,
-        drawn: true,
-        reason: 'incomplete',
-        message: `✏️ ‘${expectedChar}’还没写完整哦，继续把字写完吧！(Incomplete strokes, please finish ‘${expectedChar}’!)`
-      };
-    }
-
-    return {
-      pass: true,
-      drawn: true,
-      accuracy: Math.round(accuracy * 100),
-      message: `🌟 写得非常标准漂亮！(Accurate handwriting!)`
-    };
-  }
 
   function showWriteFeedback(message, type) {
     const el = document.getElementById('write-feedback');
@@ -2238,91 +2120,78 @@ const App = (() => {
     const chars = Array.from(word.hanzi);
     const currentChar = chars[state.currentCharIndex] || word.hanzi;
 
-    let anyDrawn = false;
-    let anyFailed = false;
-    let failedBoxIndex = null;
-    let failedMessage = '';
-    let passedCount = 0;
+    // ---- CHECK BOX 2: AI QUIZ (MANDATORY) ----
+    if (!quizBoxPassed) {
+      SoundEffects.playTryAgain();
+      const box2 = document.getElementById('quad-box-2');
+      if (box2) box2.classList.add('shake-error');
+      setTimeout(() => { if (box2) box2.classList.remove('shake-error'); }, 600);
+      showWriteFeedback('🤖 请先完成第 2 格 AI 验证！用正确笔画写完字哦！(Please complete the AI Quiz in Box 2 first!)', 'retry');
+      return;
+    }
 
-    for (let i = 1; i <= 4; i++) {
+    // ---- CHECK FREE PRACTICE BOXES (1, 3, 4): just need something drawn ----
+    let freeBoxesDone = 0;
+    for (const i of [1, 3, 4]) {
       const canvas = quadCanvases[i - 1];
       const box = document.getElementById(`quad-box-${i}`);
-      const card = document.getElementById(`quad-card-${i}`);
       const star = document.getElementById(`quad-star-${i}`);
+      const card = document.getElementById(`quad-card-${i}`);
 
       if (box) box.classList.remove('pass-glow', 'shake-error');
 
-      const check = verifyWritingAccuracy(canvas, currentChar, i);
-
-      if (check.drawn) {
-        anyDrawn = true;
-        if (check.pass) {
+      if (canvas) {
+        const ctx = canvas.getContext('2d');
+        const w = canvas.width;
+        const h = canvas.height;
+        const data = ctx.getImageData(0, 0, w, h).data;
+        let drawnPixels = 0;
+        for (let p = 3; p < data.length; p += 16) {
+          if (data[p] > 40) drawnPixels++;
+        }
+        if (drawnPixels >= 5) {
+          freeBoxesDone++;
           state.quadCompleted[i] = true;
-          passedCount++;
           if (star) star.textContent = '⭐';
           if (card) card.classList.add('completed');
           if (box) box.classList.add('pass-glow');
-        } else {
-          state.quadCompleted[i] = false;
-          anyFailed = true;
-          if (!failedBoxIndex) {
-            failedBoxIndex = i;
-            failedMessage = check.message;
-          }
-          if (box) box.classList.add('shake-error');
-          if (star) star.textContent = '☆';
-          if (card) card.classList.remove('completed');
         }
-      } else {
-        // Not drawn yet
-        state.quadCompleted[i] = false;
-        if (star) star.textContent = '☆';
-        if (card) card.classList.remove('completed');
       }
     }
 
-    if (!anyDrawn) {
-      SoundEffects.playTryAgain();
-      showWriteFeedback('✏️ 请先在田字格里书写汉字哦！(Please write in the boxes first!)', 'retry');
-      return;
-    }
+    // All 4 boxes done (quiz passed + 3 free boxes drawn)
+    if (freeBoxesDone >= 3) {
+      SoundEffects.playVictory();
+      const mistakeText = quizTotalMistakes === 0
+        ? '满分！AI 验证全对！'
+        : `AI 验证通过 (${quizTotalMistakes} 次修改)`;
+      showWriteFeedback(`🎉 太棒了！4个格子全部完成！${mistakeText} (All 4 boxes completed! Excellent!) ⭐⭐⭐⭐`, 'success');
+      speakDynamic('太棒了！');
 
-    if (anyFailed && failedBoxIndex) {
-      SoundEffects.playTryAgain();
-      showWriteFeedback(`第 ${failedBoxIndex} 格：${failedMessage || '笔画写偏啦，请认真书写！'}`, 'retry');
-      return;
-    }
-
-    if (passedCount < 4) {
-      SoundEffects.playPop();
-      showWriteFeedback(`👍 很棒！已写好 ${passedCount} / 4 格！继续把剩下 ${4 - passedCount} 格也写完吧！(Completed ${passedCount}/4 boxes, keep going!)`, 'success');
-      return;
-    }
-
-    // ALL 4 BOXES COMPLETED!
-    SoundEffects.playVictory();
-    showWriteFeedback(`🎉 太棒了！4个格子全部写完啦！(All 4 boxes completed! Excellent!) ⭐⭐⭐⭐`, 'success');
-    speakDynamic('太棒了！');
-
-    // If multi-character word and has remaining character
-    if (state.currentCharIndex < chars.length - 1) {
-      setTimeout(() => {
-        state.currentCharIndex++;
-        renderWriteCard();
-        const fb = document.getElementById('write-feedback');
-        if (fb) fb.classList.add('hidden');
-      }, 1300);
+      // If multi-character word and has remaining character
+      if (state.currentCharIndex < chars.length - 1) {
+        setTimeout(() => {
+          state.currentCharIndex++;
+          renderWriteCard();
+          const fb = document.getElementById('write-feedback');
+          if (fb) fb.classList.add('hidden');
+        }, 1300);
+      } else {
+        // Move to next word
+        setTimeout(() => {
+          if (state.currentWriteIndex < state.currentLevel.vocabulary.length - 1) {
+            writeNext();
+          } else {
+            showQuizResults('write');
+          }
+          const fb = document.getElementById('write-feedback');
+          if (fb) fb.classList.add('hidden');
+        }, 1300);
+      }
     } else {
-      // Move to next word
-      setTimeout(() => {
-        if (state.currentWriteIndex < state.currentLevel.vocabulary.length - 1) {
-          writeNext();
-        } else {
-          showQuizResults('write');
-        }
-        const fb = document.getElementById('write-feedback');
-        if (fb) fb.classList.add('hidden');
-      }, 1300);
+      SoundEffects.playPop();
+      const remaining = 3 - freeBoxesDone;
+      showWriteFeedback(`👍 AI 验证已通过！请把剩下 ${remaining} 个练习格也写完吧！(AI passed! Please fill the remaining ${remaining} practice boxes!)`, 'success');
     }
   }
 

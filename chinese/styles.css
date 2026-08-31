@@ -2477,3 +2477,94 @@ body {
   .relative-hanzi { font-size: 1.15rem; }
 }
 
+/* ============================================================
+   HanziWriter Quiz Box (Box 2 - AI Verification)
+   ============================================================ */
+
+.quiz-box-container {
+  position: relative;
+  overflow: hidden;
+}
+
+.quiz-box-container #hanzi-quiz-target {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.quiz-box-container #hanzi-quiz-target svg {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.quiz-stroke-feedback {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-size: 0.7rem;
+  font-weight: 800;
+  padding: 0.3rem 0.5rem;
+  z-index: 10;
+  opacity: 0;
+  transform: translateY(100%);
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  pointer-events: none;
+}
+
+.quiz-stroke-feedback.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.quiz-stroke-feedback.correct {
+  background: rgba(16, 185, 129, 0.92);
+  color: white;
+}
+
+.quiz-stroke-feedback.wrong {
+  background: rgba(239, 68, 68, 0.92);
+  color: white;
+}
+
+.quiz-stroke-feedback.complete {
+  background: rgba(59, 130, 246, 0.92);
+  color: white;
+}
+
+.quiz-fb-correct,
+.quiz-fb-wrong,
+.quiz-fb-complete {
+  display: block;
+  line-height: 1.3;
+}
+
+#quad-card-2 .quad-title {
+  color: #3B82F6;
+  font-weight: 900;
+}
+
+#quad-card-2 .quad-num {
+  background: linear-gradient(135deg, #3B82F6, #8B5CF6) !important;
+}
+
+#quad-card-2:not(.completed) .quiz-box-container {
+  animation: quizPulse 2s ease-in-out infinite;
+}
+
+@keyframes quizPulse {
+  0%, 100% { border-color: #93C5FD; }
+  50% { border-color: #3B82F6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15); }
+}
+
+#quad-card-2.completed .quiz-box-container {
+  border-color: #10B981 !important;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.25) !important;
+}
