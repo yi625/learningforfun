@@ -2039,12 +2039,13 @@ const App = (() => {
     document.getElementById('write-pinyin').textContent = word.pinyin;
     document.getElementById('write-english').textContent = word.english;
 
-    // Multi-char tabs
+    // Multi-char tabs (deduplicate identical chars like 妈妈 → just 妈)
     const chars = Array.from(word.hanzi);
+    const uniqueChars = [...new Set(chars)];
     const charTabsRow = document.getElementById('write-char-tabs');
-    if (chars.length > 1) {
+    if (uniqueChars.length > 1) {
       charTabsRow.classList.remove('hidden');
-      charTabsRow.innerHTML = chars.map((c, i) => `
+      charTabsRow.innerHTML = uniqueChars.map((c, i) => `
         <button type="button" class="char-tab-btn ${i === state.currentCharIndex ? 'active' : ''}" data-char-idx="${i}">
           ${c}
         </button>
@@ -2061,7 +2062,7 @@ const App = (() => {
       state.currentCharIndex = 0;
     }
 
-    const currentChar = chars[state.currentCharIndex] || word.hanzi;
+    const currentChar = uniqueChars[state.currentCharIndex] || word.hanzi;
 
     // Update stroke demo
     updateStrokeAnimation(currentChar);
@@ -2196,7 +2197,8 @@ const App = (() => {
   function finishWriting() {
     const word = state.currentLevel.vocabulary[state.currentWriteIndex];
     const chars = Array.from(word.hanzi);
-    const currentChar = chars[state.currentCharIndex] || word.hanzi;
+    const uniqueChars = [...new Set(chars)];
+    const currentChar = uniqueChars[state.currentCharIndex] || word.hanzi;
 
     // ---- CHECK BOX 2: AI QUIZ (MANDATORY) ----
     if (!quizBoxPassed) {
@@ -2257,8 +2259,8 @@ const App = (() => {
       showWriteFeedback(`🎉 太棒了！4个格子全部完成！${mistakeText} (All 4 boxes completed! Excellent!) ⭐⭐⭐⭐`, 'success');
       speakDynamic('太棒了！');
 
-      // If multi-character word and has remaining character
-      if (state.currentCharIndex < chars.length - 1) {
+      // If multi-character word and has remaining unique character
+      if (state.currentCharIndex < uniqueChars.length - 1) {
         setTimeout(() => {
           state.currentCharIndex++;
           renderWriteCard();
