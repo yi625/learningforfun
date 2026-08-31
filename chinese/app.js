@@ -2115,6 +2115,84 @@ const App = (() => {
     el.classList.remove('hidden');
   }
 
+  // Basic shape check for free practice boxes (not as strict as AI quiz, but catches random scribbles)
+  function basicShapeCheck(canvas, expectedChar) {
+    if (!canvas) return { drawn: false, pass: false };
+    const ctx = canvas.getContext('2d');
+    const w = canvas.width;
+    const h = canvas.height;
+
+    // Count drawn pixels
+    const drawnData = ctx.getImageData(0, 0, w, h).data;
+    let drawnPts = [];
+    for (let y = 0; y < h; y += 4) {
+      for (let x = 0; x < w; x += 4) {
+        if (drawnData[(y * w + x) * 4 + 3] > 40) {
+          drawnPts.push({ x, y });
+        }
+      }
+    }
+
+    if (drawnPts.length < 15) {
+      return { drawn: false, pass: false, msg: '✏️ 还没写字哦！(Please write first!)' };
+    }
+
+    // Render expected character on offscreen canvas for comparison
+    const off = document.createElement('canvas');
+    off.width = w; off.height = h;
+    const oc = off.getContext('2d');
+    const fontSize = Math.round(w * 0.65);
+    oc.fillStyle = '#000';
+    oc.font = `900 ${fontSize}px 'Noto Sans SC', 'Microsoft YaHei', sans-serif`;
+    oc.textAlign = 'center';
+    oc.textBaseline = 'middle';
+    oc.fillText(expectedChar, w / 2, h / 2);
+
+    const refData = oc.getImageData(0, 0, w, h).data;
+    let refPts = [];
+    for (let y = 0; y < h; y += 4) {
+      for (let x = 0; x < w; x += 4) {
+        if (refData[(y * w + x) * 4 + 3] > 30) {
+          refPts.push({ x, y });
+        }
+      }
+    }
+
+    if (refPts.length === 0) return { drawn: true, pass: true, msg: '' };
+
+    // Check overlap with generous tolerance
+    const TOL = Math.max(18, Math.round(w * 0.09));
+    const TOL_SQ = TOL * TOL;
+
+    // Accuracy: how many drawn pixels are near the reference?
+    let nearRef = 0;
+    for (const dp of drawnPts) {
+      for (const rp of refPts) {
+        if ((dp.x - rp.x) ** 2 + (dp.y - rp.y) ** 2 <= TOL_SQ) { nearRef++; break; }
+      }
+    }
+    const accuracy = nearRef / drawnPts.length;
+
+    // Coverage: how much of the reference is covered by drawing?
+    let covered = 0;
+    for (const rp of refPts) {
+      for (const dp of drawnPts) {
+        if ((dp.x - rp.x) ** 2 + (dp.y - rp.y) ** 2 <= TOL_SQ) { covered++; break; }
+      }
+    }
+    const coverage = covered / refPts.length;
+
+    // Require 45% accuracy and 30% coverage — lenient but catches random circles
+    if (accuracy < 0.45 || coverage < 0.30) {
+      return {
+        drawn: true, pass: false,
+        msg: `🤔 写的不太像'${expectedChar}'哦，请认真写！(Doesn't look like '${expectedChar}', try again!)`
+      };
+    }
+
+    return { drawn: true, pass: true, msg: '' };
+  }
+
   function finishWriting() {
     const word = state.currentLevel.vocabulary[state.currentWriteIndex];
     const chars = Array.from(word.hanzi);
@@ -2130,8 +2208,9 @@ const App = (() => {
       return;
     }
 
-    // ---- CHECK FREE PRACTICE BOXES (1, 3, 4): just need something drawn ----
+    // ---- CHECK FREE PRACTICE BOXES (1, 3, 4): basic shape check ----
     let freeBoxesDone = 0;
+    let firstFail = null;
     for (const i of [1, 3, 4]) {
       const canvas = quadCanvases[i - 1];
       const box = document.getElementById(`quad-box-${i}`);
@@ -2140,26 +2219,36 @@ const App = (() => {
 
       if (box) box.classList.remove('pass-glow', 'shake-error');
 
-      if (canvas) {
-        const ctx = canvas.getContext('2d');
-        const w = canvas.width;
-        const h = canvas.height;
-        const data = ctx.getImageData(0, 0, w, h).data;
-        let drawnPixels = 0;
-        for (let p = 3; p < data.length; p += 16) {
-          if (data[p] > 40) drawnPixels++;
-        }
-        if (drawnPixels >= 5) {
-          freeBoxesDone++;
-          state.quadCompleted[i] = true;
-          if (star) star.textContent = '⭐';
-          if (card) card.classList.add('completed');
-          if (box) box.classList.add('pass-glow');
-        }
+      const check = basicShapeCheck(canvas, currentChar);
+
+      if (check.drawn && check.pass) {
+        freeBoxesDone++;
+        state.quadCompleted[i] = true;
+        if (star) star.textContent = '⭐';
+        if (card) card.classList.add('completed');
+        if (box) box.classList.add('pass-glow');
+      } else if (check.drawn && !check.pass) {
+        // Drawn but doesn't look right
+        state.quadCompleted[i] = false;
+        if (star) star.textContent = '☆';
+        if (card) card.classList.remove('completed');
+        if (box) box.classList.add('shake-error');
+        if (!firstFail) firstFail = { box: i, msg: check.msg };
+      } else {
+        // Not drawn yet
+        state.quadCompleted[i] = false;
+        if (star) star.textContent = '☆';
+        if (card) card.classList.remove('completed');
       }
     }
 
-    // All 4 boxes done (quiz passed + 3 free boxes drawn)
+    if (firstFail) {
+      SoundEffects.playTryAgain();
+      showWriteFeedback(`第 ${firstFail.box} 格：${firstFail.msg}`, 'retry');
+      return;
+    }
+
+    // All 4 boxes done (quiz passed + 3 free boxes with shape check)
     if (freeBoxesDone >= 3) {
       SoundEffects.playVictory();
       const mistakeText = quizTotalMistakes === 0
