@@ -2504,24 +2504,35 @@ body {
 }
 
 .quiz-stroke-feedback {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
+  position: relative;
   text-align: center;
-  font-size: 0.7rem;
+  font-size: 0.65rem;
   font-weight: 800;
-  padding: 0.3rem 0.5rem;
+  padding: 0.25rem 0.4rem;
   z-index: 10;
   opacity: 0;
-  transform: translateY(100%);
+  max-height: 0;
+  overflow: hidden;
   transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
   pointer-events: none;
+  border-radius: 0 0 0.6rem 0.6rem;
+  margin-top: -2px;
 }
 
 .quiz-stroke-feedback.show {
   opacity: 1;
-  transform: translateY(0);
+  max-height: 3rem;
+  padding: 0.3rem 0.4rem;
+}
+
+.quiz-stroke-feedback.show.correct,
+.quiz-stroke-feedback.show.wrong {
+  animation: feedbackFade 2.5s ease-in-out forwards;
+}
+
+@keyframes feedbackFade {
+  0%, 60% { opacity: 1; max-height: 3rem; }
+  100% { opacity: 0; max-height: 0; padding: 0; }
 }
 
 .quiz-stroke-feedback.correct {
